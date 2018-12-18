@@ -1,0 +1,23 @@
+{
+  "name": "pimp",
+  "version": "1.0.0",
+  "main": "index.js",
+  "repository": "ssh://git@scm-git-eur.misys.global.ad:7999/~asevcsik/pimp.git",
+  "author": "Sevcsik-Zajacz, Andras <andras.sevcsik@finastra.com>",
+  "license": "UNLICENSED",
+  "private": true,
+  "dependencies": {
+    "@types/lodash": "^4.14.119",
+    "@types/node": "^10.12.15",
+    "@types/ws": "^6.0.1",
+    "lodash": "^4.17.11",
+    "rxjs": "^6.3.3",
+    "ts-node": "^7.0.1",
+    "typescript": "^3.2.2",
+    "ws": "^6.1.2"
+  },
+  "scripts": {
+    "start": "ts-node server.ts",
+    "debug": "NODE_OPTIONS=--inspect-brk ts-node server.ts"
+  }
+}
