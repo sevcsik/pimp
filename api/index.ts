@@ -1,33 +1,21 @@
+import { WSMessage, WSCommand } from './common'
+
 import { Observable } from 'rxjs'
 import { filter } from 'rxjs/operators'
-import { iteratee, includes } from 'lodash/fp'
+import { iteratee, includes, negate } from 'lodash/fp'
 import * as WebSocket from 'ws'
 
-export type WSMessage = { client: WebSocket, message: String, args: any }
-
 export type ConnectionMessage = WSMessage & { message: 'connection' }
-export type PingMessage = WSMessage & { message: 'ping' }
-export type UnknownMessage = WSMessage
 
-export type ClientMessage = ConnectionMessage
-	| PingMessage
-	| UnknownMessage
+const matchContext = (context: string) => iteratee({ command: { context } })
 
-const knownMessages =
-	[ 'ping' ]
-
-const matchMessage = (message: String) => iteratee({ message })
-const matchUnknown = ({ message }: ClientMessage) => !includes(message, knownMessages)
-
-const initPing = (messages$: Observable<PingMessage>) => messages$
-	.subscribe(message => message.client.send(JSON.stringify({ message: 'pong'})))
-
-const initUnknown = (messages$: Observable<ClientMessage>) => messages$
-	.subscribe(message => message.client.send(JSON.stringify({ error: 'unknown message'
-	                                                         , message: message.message
+const initUnknown = (commands$: Observable<WSCommand>) => commands$
+	.subscribe(message => message.client.send(JSON.stringify({ error: 'unknown command'
+	                                                         , command: message.command
 	                                                         })))
 
-export const initApi = (messages$: Observable<ClientMessage>) => {
-	initPing(messages$.pipe(filter(matchMessage('ping'))))
-	initUnknown(messages$.pipe(filter(matchUnknown)))
+export const initApi = (commands$: Observable<WSMessage>) => {
+	initTeams(commands$.pipe(filter(matchContext('team'))))
+	let rest$ = commands$.pipe(filter(negate(matchContext('team'))))
+	initUnknown(rest$)
 }
