@@ -5,3 +5,4 @@ export type Command = { context: Context, name: CommandName }
 export type Context = String
 export type EventName = String
 export type Event = { context: Context, id: AggregateId, name: EventName }
+export type Reply = { command: Command }

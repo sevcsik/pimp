@@ -1,4 +1,6 @@
-import { initApi, ClientMessage, ConnectionMessage } from './api'
+import { initApi } from './api'
+import { WSCommand } from './api/common'
+import { Command } from './domain/common'
 
 import { defaults } from 'lodash/fp'
 import { Observable } from 'rxjs'
@@ -11,13 +13,12 @@ const options = defaults(
 
 const server = new WebSocket.Server(options)
 
-const messages$: Observable<ClientMessage> = new Observable((observer) => {
+const messages$: Observable<WSCommand> = new Observable((observer) => {
 	server.on('connection', (client: WebSocket) => {
-		observer.next({ client, message: 'connection', args: null })
 		client.on('message', rawMessage => {
 			try {
-				const { message, args } = JSON.parse(rawMessage.toString())
-				observer.next({ client, message, args })
+				const command = JSON.parse(rawMessage.toString()) as Command
+				observer.next({ from: client, command })
 			} catch (e) {
 				client.send(JSON.stringify({ error: "invalid json", data: rawMessage, exception: e.message }))
 			}

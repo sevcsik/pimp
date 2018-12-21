@@ -1,21 +1,67 @@
-import { WSMessage, WSCommand } from './common'
+import { WSCommand, WSReply } from './common'
+import * as Domain from '../domain/team'
 
-import { Observable } from 'rxjs'
-import { filter } from 'rxjs/operators'
-import { iteratee, includes, negate } from 'lodash/fp'
-import * as WebSocket from 'ws'
+import { Observable, ReplaySubject } from 'rxjs'
+import { filter, map, partition } from 'rxjs/operators'
+import { iteratee } from 'lodash/fp'
 
-export type ConnectionMessage = WSMessage & { message: 'connection' }
+type TeamEvents = Domain.TeamCreatedEvent
+                | Domain.TeamDeletedEvent
+                | Domain.TeamUpdatedEvent
+
+export const initApi = (commands$: Observable<WSCommand>) => {
+	const parts = partition(matchContext('team'))(commands$)
+	const teamCommands$ = parts[0] as Observable<WSCommand & { command: Domain.TeamCommand }>
+	const rest$ = parts[1] as Observable<WSCommand>
+
+	const events$ = initEvents(teamCommands$)
+	const unknownMessageErrors$ = initUnknown(rest$)
+
+	return { events$, unknownMessageErrors$ }
+}
+
+const initEvents = (commands$: Observable<WSCommand>):
+		{ events$: Observable<TeamEvents>, replies$: Observable<WSReply> } => {
+	const events$: ReplaySubject<TeamEvents> = new ReplaySubject
+
+	const createCommands$ = commands$.pipe(filter(msg => msg.command.name === 'create'))
+	const parts = partition(
+		({ command: { teamName, email } }) => Domain.validateTeam(name, email)
+	)(createCommands$)
+
+	const acceptedCreateCommands$ = parts[0] as Observable<WSCommand & { command: Domain.CreateTeamCommand }>
+	const rejectedCreateCommands$ = parts[1] as Observable<WSCommand & { command: Domain.CreateTeamCommand }>
+
+	(acceptedCreateCommands$ as Observable<WSCommand & { command: Domain.CreateTeamCommand }>)
+		.pipe(map(({ command: { teamName, email } }): Domain.TeamCreatedEvent => (
+			{ context: 'team'
+			, id: email
+			, name: 'created'
+			, team: { email
+			        , id: email
+			        , name: teamName
+			        }
+			}
+		)))
+		.subscribe(events$)
+
+	const invalidCreateCommandReplies$ = rejectedCreateCommands$
+		.pipe(map(command => {
+			const reply: Domain.InvalidCommandreply = { command: command.command
+			                                          , error: 'invalid command'
+			                                          }
+			return { to: command.from, reply }
+		}))
+
+	return { events$: events$.asObservable(), replies$: invalidCreateCommandReplies$ }
+}
+
+const initUnknown = (commands$: Observable<WSCommand>): Observable<WSReply & { reply: Domain.UnknownCommandreply }> =>
+	commands$.pipe(map(command => {
+		const reply: Domain.UnknownCommandreply = { command: command.command
+	                                              , error: 'unknown command'
+	                                              }
+		return { to: command.from, reply }
+	}))
 
 const matchContext = (context: string) => iteratee({ command: { context } })
-
-const initUnknown = (commands$: Observable<WSCommand>) => commands$
-	.subscribe(message => message.client.send(JSON.stringify({ error: 'unknown command'
-	                                                         , command: message.command
-	                                                         })))
-
-export const initApi = (commands$: Observable<WSMessage>) => {
-	initTeams(commands$.pipe(filter(matchContext('team'))))
-	let rest$ = commands$.pipe(filter(negate(matchContext('team'))))
-	initUnknown(rest$)
-}
