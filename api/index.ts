@@ -1,7 +1,7 @@
 import { WSCommand, WSReply } from './common'
 import * as Domain from '../domain/team'
 
-import { Observable, ReplaySubject } from 'rxjs'
+import { Observable, ReplaySubject, merge } from 'rxjs'
 import { filter, map, partition } from 'rxjs/operators'
 import { iteratee } from 'lodash/fp'
 
@@ -13,11 +13,12 @@ export const initApi = (commands$: Observable<WSCommand>) => {
 	const parts = partition(matchContext('team'))(commands$)
 	const teamCommands$ = parts[0] as Observable<WSCommand & { command: Domain.TeamCommand }>
 	const rest$ = parts[1] as Observable<WSCommand>
+	const { events$: teamEvents$, replies$: teamReplies$ } = initEvents(teamCommands$)
 
-	const events$ = initEvents(teamCommands$)
 	const unknownMessageErrors$ = initUnknown(rest$)
 
-	return { events$, unknownMessageErrors$ }
+	const replies$ = merge(teamReplies$, unknownMessageErrors$)
+	return { events$: teamEvents$, replies$ }
 }
 
 const initEvents = (commands$: Observable<WSCommand>):
@@ -26,7 +27,7 @@ const initEvents = (commands$: Observable<WSCommand>):
 
 	const createCommands$ = commands$.pipe(filter(msg => msg.command.name === 'create'))
 	const parts = partition(
-		({ command: { teamName, email } }) => Domain.validateTeam(name, email)
+		({ command: { teamName, email } }) => Domain.validateTeam(teamName, email)
 	)(createCommands$)
 
 	const acceptedCreateCommands$ = parts[0] as Observable<WSCommand & { command: Domain.CreateTeamCommand }>
