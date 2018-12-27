@@ -1,14 +1,11 @@
 import { initCreate } from './create'
+import { initState } from './state'
 import { WSCommand, WSReply } from './common'
 import * as Domain from '../domain'
 
 import { Observable, ReplaySubject, merge } from 'rxjs'
-import { filter, map, partition } from 'rxjs/operators'
+import { filter, map, partition, scan } from 'rxjs/operators'
 import { iteratee } from 'lodash/fp'
-
-type TeamEvents = Domain.TeamCreatedEvent
-                | Domain.TeamDeletedEvent
-                | Domain.TeamUpdatedEvent
 
 export const initApi = (commands$: Observable<WSCommand>) => {
 	const parts = partition(matchContext('team'))(commands$)
@@ -23,21 +20,25 @@ export const initApi = (commands$: Observable<WSCommand>) => {
 }
 
 const initContext = (commands$: Observable<WSCommand>):
-		{ events$: Observable<TeamEvents>, replies$: Observable<WSReply> } => {
-	const parts = partition(matchCommand('create'))(commands$)
+		{ events$: Observable<Domain.AllEvents>
+		, replies$: Observable<WSReply>
+		, state$: Observable<Domain.State>
+		} => {
+
+	let parts = partition(matchCommand('create'))(commands$)
 	const createCommands$ = parts[0] as Observable<WSCommand & { command: Domain.CreateTeamCommand }>
-	const { events$: createEvents$, replies$: createReplies$ } = initCreate(createCommands$)
-
+	parts = partition(matchCommand('get state'))(parts[1])
+	const getStateCommands$ = parts[0] as Observable<WSCommand & { command: Domain.GetStateCommand }>
 	const unknownCommands$ = parts[1] as Observable<WSCommand>
-	const unknownCommandReplies$ = unknownCommands$.pipe(map(command => {
-		const reply: Domain.UnknownCommandreply = { command: command.command
-		                                          , error: 'unknown command'
-		                                          }
-		return { to: command.from, reply }
-	}))
 
+	const { events$: createEvents$, replies$: createReplies$ } = initCreate(createCommands$)
+	const unknownCommandReplies$ = initUnknown(unknownCommands$)
 
-	return { events$: createEvents$, replies$: merge(unknownCommandReplies$, createReplies$) }
+	const events$ = merge(createEvents$)
+	const { state$, replies$: getStateReplies$ } = initState(getStateCommands$, events$)
+	const replies$ = merge(createReplies$, getStateReplies$, unknownCommandReplies$) as Observable<WSReply>
+
+	return { events$, replies$, state$ }
 }
 
 const initUnknown = (commands$: Observable<WSCommand>): Observable<WSReply & { reply: Domain.UnknownCommandreply }> =>
