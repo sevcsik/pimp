@@ -3,8 +3,12 @@ import { WSCommand } from './api/common'
 import { Command } from './domain/common'
 
 import { defaults, extend } from 'lodash/fp'
+import { create as createSpy } from 'rxjs-spy'
 import { Observable } from 'rxjs'
 import * as WebSocket from 'ws'
+
+const spy = createSpy()
+spy.log(/.+/)
 
 const options = defaults(
 	{ port: 8000, host: 'localhost' },

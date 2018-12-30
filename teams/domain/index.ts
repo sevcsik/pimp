@@ -8,6 +8,7 @@ import { AggregateId
 import { concat
        , extend
        , filter
+       , find
        , findIndex
        , includes
        , size
@@ -17,7 +18,6 @@ import { concat
 
 export type Email = string
 export type Team = AggregateRoot & { name: string, email: Email }
-export const validateTeam = (name: string, email: string): boolean => includes(' ', name) && includes('@', email)
 
 // Commands
 export type TeamCommand = Command & { context: 'team' }
@@ -64,4 +64,8 @@ export const apply = ( state: State
 	}
 }
 
-export const initialState = { teams: [] }
+export const validate = (name: string, email: string, existingTeams: ReadonlyArray<Team>): boolean => {
+	return includes(' ', name) && includes('@', email) && find(team => team.id === email, existingTeams) === undefined
+}
+
+export const initialState: State = { teams: [] }
