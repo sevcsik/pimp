@@ -3,12 +3,18 @@ import { WSCommand } from './api/common'
 import { Command } from './domain/common'
 
 import { defaults, extend } from 'lodash/fp'
+import { Observable, Subject } from 'rxjs'
+import { share } from 'rxjs/operators'
 import { create as createSpy } from 'rxjs-spy'
-import { Observable } from 'rxjs'
+import { tag } from 'rxjs-spy/operators'
 import * as WebSocket from 'ws'
 
+/*
 const spy = createSpy()
-spy.log(/.+/)
+spy.log(/server\.ts:commands/)
+spy.log(/api\/index\.ts:initApi:createCommands/)
+*/
+//spy.log(/api\/index\.ts:initApi:createReplies/)
 
 const options = defaults(
 	{ port: 8000, host: 'localhost' },
@@ -16,23 +22,21 @@ const options = defaults(
 )
 
 const server = new WebSocket.Server(options)
-
 const isSocketOpen = (client: WebSocket) => client.readyState === WebSocket.OPEN
+const commands$: Subject<WSCommand> = new Subject
 
-const messages$: Observable<WSCommand> = new Observable((observer) => {
-	server.on('connection', (client: WebSocket) => {
-		client.on('message', rawMessage => {
-			try {
-				const command = JSON.parse(rawMessage.toString()) as Command
-				observer.next({ from: client, command })
-			} catch (e) {
-				client.send(JSON.stringify({ error: "invalid json", data: rawMessage, exception: e.message }))
-			}
-		})
+server.on('connection', (client: WebSocket) => {
+	client.on('message', rawMessage => {
+		try {
+			const command = JSON.parse(rawMessage.toString()) as Command
+			commands$.next({ from: client, command })
+		} catch (e) {
+			client.send(JSON.stringify({ error: "invalid json", data: rawMessage, exception: e.message }))
+		}
 	})
 })
 
-const { events$, replies$ } = initApi(messages$)
+const { events$, replies$ } = initApi(commands$.pipe(tag('server.ts:commands')).pipe(share()))
 
 events$.subscribe(event => {
 	server.clients.forEach(client => {
