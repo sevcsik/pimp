@@ -2,7 +2,7 @@ import { WSCommand, WSReply } from './common'
 import * as Domain from '../domain'
 
 import { Observable } from 'rxjs'
-import { partition, map, withLatestFrom, pluck, tap } from 'rxjs/operators'
+import { partition, map, withLatestFrom, pluck } from 'rxjs/operators'
 import { tag } from 'rxjs-spy/operators/tag'
 
 export const initCreate = ( commands$: Observable<WSCommand & { command: Domain.CreateTeamCommand }>

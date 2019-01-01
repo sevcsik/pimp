@@ -4,7 +4,7 @@ import { WSCommand, WSReply } from './common'
 import * as Domain from '../domain'
 
 import { Observable, Subject, merge } from 'rxjs'
-import { filter, map, partition, scan, tap } from 'rxjs/operators'
+import { map, partition } from 'rxjs/operators'
 import { tag } from 'rxjs-spy/operators/tag'
 import { iteratee } from 'lodash/fp'
 

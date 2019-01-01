@@ -16,6 +16,8 @@ import { concat
        , takeRight
        } from 'lodash/fp'
 
+export * from './common'
+
 export type Email = string
 export type Team = AggregateRoot & { name: string, email: Email }
 

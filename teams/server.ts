@@ -2,11 +2,12 @@ import { initApi } from './api'
 import { WSCommand } from './api/common'
 import { Command } from './domain/common'
 
-import { defaults, extend } from 'lodash/fp'
+import { defaults, extendAll } from 'lodash/fp'
 import { Observable, Subject } from 'rxjs'
 import { share } from 'rxjs/operators'
 import { create as createSpy } from 'rxjs-spy'
 import { tag } from 'rxjs-spy/operators'
+import * as uuid from 'uuid'
 import * as WebSocket from 'ws'
 
 /*
@@ -28,7 +29,7 @@ const commands$: Subject<WSCommand> = new Subject
 server.on('connection', (client: WebSocket) => {
 	client.on('message', rawMessage => {
 		try {
-			const command = JSON.parse(rawMessage.toString()) as Command
+			const command = extendAll([{}, JSON.parse(rawMessage.toString()), { id: uuid.v1() }]) as Command
 			commands$.next({ from: client, command })
 		} catch (e) {
 			client.send(JSON.stringify({ error: "invalid json", data: rawMessage, exception: e.message }))
