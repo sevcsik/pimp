@@ -10,22 +10,22 @@ import { iteratee } from 'lodash/fp'
 
 const matchCommand = (name: string) => iteratee({ command: { context: 'team', name } })
 
-const initUnknown = (commands$: Observable<WSCommand>): Observable<WSReply & { reply: Domain.UnknownCommandreply }> =>
+const initUnknown = (commands$: Observable<WSCommand>): Observable<WSReply & { reply: Domain.UnknownCommandReply }> =>
 	commands$.pipe(map(command => {
-		const reply: Domain.UnknownCommandreply = { command: command.command
+		const reply: Domain.UnknownCommandReply = { command: command.command
 	                                              , error: 'unknown command'
 	                                              }
 		return { to: command.from, reply }
 	}))
 
 export const initApi = (commands$: Observable<WSCommand>):
-		{ events$: Observable<Domain.AllEvents>
+		{ events$: Observable<Domain.AnyEvent>
 		, replies$: Observable<WSReply>
 		} => {
 
 	const tp = 'api/index.ts:initApi'
 	let parts
-	const events$: Subject<Domain.AllEvents> = new Subject
+	const events$: Subject<Domain.AnyEvent> = new Subject
 
 	// Handle get state commands
 	parts = partition(matchCommand('get state'))(commands$)

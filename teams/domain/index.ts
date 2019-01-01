@@ -33,21 +33,26 @@ export type TeamEvent = Event & { context: 'team' }
 export type TeamCreatedEvent = TeamEvent & { name: 'created', team: Team }
 export type TeamUpdatedEvent = TeamEvent & { name: 'updated', team: Team }
 export type TeamDeletedEvent = TeamEvent & { name: 'deleted' }
-export type AllEvents = TeamCreatedEvent
-                      | TeamDeletedEvent
-                      | TeamUpdatedEvent
+export type AnyEvent = TeamCreatedEvent
+                     | TeamDeletedEvent
+                     | TeamUpdatedEvent
 
 
 // Replies
 export type GetStateReply = Reply & { state: any }
-export type InvalidCommandreply = Reply & { error: 'invalid command' }
-export type UnknownCommandreply = Reply & { error: 'unknown command' }
+export type AcceptedCommandReply = Reply & { accepted: true }
+export type InvalidCommandReply = Reply & { error: 'invalid command' }
+export type UnknownCommandReply = Reply & { error: 'unknown command' }
+export type AnyReply = GetStateReply
+                     | AcceptedCommandReply
+                     | InvalidCommandReply
+                     | UnknownCommandReply
 
 // State
 export type State = { teams: ReadonlyArray<Team> }
 
 export const apply = ( state: State
-                     , event: AllEvents
+                     , event: AnyEvent
                      ): State => {
 	if (event.name === 'created') {
 		// TODO: why doesn't control flow analysis work?

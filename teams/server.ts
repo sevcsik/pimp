@@ -10,11 +10,7 @@ import { tag } from 'rxjs-spy/operators'
 import * as uuid from 'uuid'
 import * as WebSocket from 'ws'
 
-/*
-const spy = createSpy()
-spy.log(/server\.ts:commands/)
-spy.log(/api\/index\.ts:initApi:createCommands/)
-*/
+//const spy = createSpy()
 //spy.log(/api\/index\.ts:initApi:createReplies/)
 
 const options = defaults(
@@ -29,7 +25,7 @@ const commands$: Subject<WSCommand> = new Subject
 server.on('connection', (client: WebSocket) => {
 	client.on('message', rawMessage => {
 		try {
-			const command = extendAll([{}, JSON.parse(rawMessage.toString()), { id: uuid.v1() }]) as Command
+			const command = extendAll([{}, { id: uuid.v1() }, JSON.parse(rawMessage.toString()) ]) as Command
 			commands$.next({ from: client, command })
 		} catch (e) {
 			client.send(JSON.stringify({ error: "invalid json", data: rawMessage, exception: e.message }))
