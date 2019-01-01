@@ -4,6 +4,7 @@ import * as Domain from '../domain'
 import { Observable, merge } from 'rxjs'
 import { partition, map, withLatestFrom, pluck, share } from 'rxjs/operators'
 import { tag } from 'rxjs-spy/operators/tag'
+import * as uuid from 'uuid'
 
 export const initCreate = ( commands$: Observable<WSCommand & { command: Domain.CreateTeamCommand }>
                           , state$: Observable<Domain.State>
@@ -27,16 +28,18 @@ export const initCreate = ( commands$: Observable<WSCommand & { command: Domain.
 	const rejectedCreateCommands$ = parts[1].pipe(pluck('0')).pipe(tag(`${tp}:rejectedCreateCommands`)) as
 		Observable<WSCommand & { command: Domain.CreateTeamCommand }>
 
-	const events$ = acceptedCreateCommands$.pipe(map(({ command: { teamName, email } }): Domain.TeamCreatedEvent => (
-		{ context: 'team'
-		, id: email
-		, name: 'created'
-		, team: { email
-		        , id: email
-		        , name: teamName
-		        }
-		}
-	))).pipe(tag(`${tp}:events`))
+	const events$ = acceptedCreateCommands$
+		.pipe(map(({ command: { teamName, email } }): Domain.TeamCreatedEvent => {
+			const id = uuid.v1()
+			return { context: 'team'
+			       , id
+			       , name: 'created'
+			       , team: { email
+			               , id
+			               , name: teamName
+			               }
+			       }
+	})).pipe(tag(`${tp}:events`))
 
 	const replies$ = merge(
 		acceptedCreateCommands$.pipe(map(command => {

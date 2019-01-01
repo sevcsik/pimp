@@ -72,7 +72,9 @@ export const apply = ( state: State
 }
 
 export const validate = (name: string, email: string, existingTeams: ReadonlyArray<Team>): boolean => {
-	return includes(' ', name) && includes('@', email) && find(team => team.id === email, existingTeams) === undefined
+	return includes(' ', name)
+	    && includes('@', email)
+	    && find(team => team.email === email, existingTeams) === undefined
 }
 
 export const initialState: State = { teams: [] }
