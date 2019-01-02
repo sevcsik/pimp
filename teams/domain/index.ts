@@ -22,27 +22,31 @@ export type Email = string
 export type Team = AggregateRoot & { name: string, email: Email }
 
 // Commands
-export type TeamCommand = Command & { context: 'team' }
-export type CreateTeamCommand = TeamCommand & { name: 'create', teamName: string, email: string }
-export type UpdateTeamCommand = TeamCommand & { name: 'update', teamId: AggregateId, teamName: string, email: string }
-export type DeleteTeamCommand = TeamCommand & { name: 'delete', teamId: AggregateId }
-export type GetStateCommand = TeamCommand & { name: 'get state' }
+export interface TeamCommand extends Command { context: 'team' }
+export interface CreateTeamCommand extends TeamCommand { name: 'create', teamName: string, email: string }
+export interface UpdateTeamCommand extends TeamCommand { name: 'update', teamId: AggregateId, teamName: string, email: string }
+export interface DeleteTeamCommand extends TeamCommand { name: 'delete', teamId: AggregateId }
+export interface GetStateCommand extends TeamCommand  { name: 'get state' }
+export type AnyCommand = CreateTeamCommand
+                       | UpdateTeamCommand
+                       | DeleteTeamCommand
+                       | GetStateCommand
 
 // Events
-export type TeamEvent = Event & { context: 'team' }
-export type TeamCreatedEvent = TeamEvent & { name: 'created', team: Team }
-export type TeamUpdatedEvent = TeamEvent & { name: 'updated', team: Team }
-export type TeamDeletedEvent = TeamEvent & { name: 'deleted' }
+export interface TeamEvent extends Event  { context: 'team' }
+export interface TeamCreatedEvent extends TeamEvent  { name: 'created', team: Team }
+export interface TeamUpdatedEvent extends TeamEvent  { name: 'updated', team: Team }
+export interface TeamDeletedEvent extends TeamEvent  { name: 'deleted' }
 export type AnyEvent = TeamCreatedEvent
                      | TeamDeletedEvent
                      | TeamUpdatedEvent
 
 
 // Replies
-export type GetStateReply = Reply & { state: any }
-export type AcceptedCommandReply = Reply & { accepted: true }
-export type InvalidCommandReply = Reply & { error: 'invalid command' }
-export type UnknownCommandReply = Reply & { error: 'unknown command' }
+export interface GetStateReply extends Reply  { state: any }
+export interface AcceptedCommandReply extends Reply  { accepted: true }
+export interface InvalidCommandReply extends Reply  { error: 'invalid command' }
+export interface UnknownCommandReply extends Reply  { error: 'unknown command' }
 export type AnyReply = GetStateReply
                      | AcceptedCommandReply
                      | InvalidCommandReply
@@ -55,26 +59,29 @@ export const apply = ( state: State
                      , event: AnyEvent
                      ): State => {
 	if (event.name === 'created') {
-		// TODO: why doesn't control flow analysis work?
-		event = event as TeamCreatedEvent
 		return extend(state, { teams: concat(state.teams, event.team) })
 	} else if (event.name === 'updated') {
-		event = event as TeamUpdatedEvent
 		const teams = state.teams
 		const pos = findIndex({ id: event.id }, teams)
 		return extend(state, { teams: [...take(pos, teams), event.team, ...takeRight(size(teams) - pos - 1, teams)] })
 	} else if (event.name === 'deleted') {
-		event = event as TeamDeletedEvent
 		return extend(state, { teams: filter(team => team.id !== event.id, state.teams) })
 	} else {
 		return state
 	}
 }
 
-export const validate = (name: string, email: string, existingTeams: ReadonlyArray<Team>): boolean => {
-	return includes(' ', name)
-	    && includes('@', email)
-	    && find(team => team.email === email, existingTeams) === undefined
-}
+const validateTeam = (name: string, email: string) => includes(' ', name) && includes('@', email)
+
+export const validateCommand = (command: AnyCommand, state: State) =>
+	  command.name === 'create'
+	? validateTeam(command.teamName, command.email)
+		&& find(team => team.email === command.email, state.teams) === undefined
+	: command.name === 'update'
+	? validateTeam(command.teamName, command.email)
+		&& find(team => team.id === command.teamId, state.teams) !== undefined
+	: command.name === 'get state'
+	? true
+	: false
 
 export const initialState: State = { teams: [] }

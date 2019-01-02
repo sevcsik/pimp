@@ -19,8 +19,7 @@ export const initCreate = ( commands$: Observable<WSCommand & { command: Domain.
 	const tp = 'api/create.ts:initCreate'
 
 	const parts = partition(
-		([ { command: { teamName, email } }, { teams } ]: CommandWithState ): boolean =>
-			Domain.validate(teamName, email, teams)
+		([ { command }, state ]: CommandWithState ): boolean => Domain.validateCommand(command, state)
 	)(commands$.pipe(withLatestFrom(state$)))
 
 	const acceptedCreateCommands$ = parts[0].pipe(pluck('0')).pipe(tag(`${tp}:acceptedCreateCommands`)).pipe(share()) as
