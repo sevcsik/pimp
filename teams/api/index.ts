@@ -1,5 +1,6 @@
 import { initCreate } from './create'
 import { initState } from './state'
+import { initUpdate } from './update'
 import { WSCommand, WSReply } from './common'
 import * as Domain from '../domain'
 
@@ -42,8 +43,8 @@ export const initApi = (commands$: Observable<WSCommand>):
 	// Handle update commands
 	parts = partition(matchCommand('update'))(parts[1])
 	const updateCommands$ = parts[0].pipe(tag(`${tp}:updateCommands`)) as
-		Observable<WSCommand & { command: Domain.CreateTeamCommand }>
-	const { events$: updateEvents$, replies$: updateReplies$ } = initCreate(updateCommands$, state$)
+		Observable<WSCommand & { command: Domain.UpdateTeamCommand }>
+	const { events$: updateEvents$, replies$: updateReplies$ } = initUpdate(updateCommands$, state$)
 
 	// Handle leftover commands as unknown
 	const unknownCommands$ = parts[1] as Observable<WSCommand>
@@ -55,7 +56,7 @@ export const initApi = (commands$: Observable<WSCommand>):
 	                      , updateReplies$.pipe(tag(`${tp}:updateReplies`))
 	                      )
 
-	createEvents$.subscribe(events$)
+	merge(createEvents$, updateEvents$).subscribe(events$)
 
 	return { events$: events$.asObservable(), replies$ }
 }
