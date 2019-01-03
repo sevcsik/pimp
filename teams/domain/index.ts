@@ -77,11 +77,13 @@ export const validateCommand = (command: AnyCommand, state: State) =>
 	  command.name === 'create'
 	? validateTeam(command.teamName, command.email)
 		&& find(team => team.email === command.email, state.teams) === undefined
+	: command.name === 'delete'
+	? find(team => team.id === command.teamId, state.teams) !== undefined
+	: command.name === 'get state'
+	? true
 	: command.name === 'update'
 	? validateTeam(command.teamName, command.email)
 		&& find(team => team.id === command.teamId, state.teams) !== undefined
-	: command.name === 'get state'
-	? true
 	: false
 
 export const initialState: State = { teams: [] }

@@ -10,8 +10,11 @@ import { tag } from 'rxjs-spy/operators'
 import * as uuid from 'uuid'
 import * as WebSocket from 'ws'
 
-//const spy = createSpy()
-//spy.log(/api\/index\.ts:initApi:createReplies/)
+const spy = createSpy()
+//spy.log(/api\/index\.ts:initApi:relevantCommands/)
+spy.log(/api\/index\.ts:initApi:getStateCommands/)
+spy.log(/api\/index\.ts:initApi:acceptedCommands/)
+spy.log(/api\/index\.ts:initApi:rejectedCommands/)
 
 const options = defaults(
 	{ port: 8000, host: 'localhost' },

@@ -6,7 +6,7 @@ import { map, withLatestFrom, scan, tap, startWith } from 'rxjs/operators'
 import { tag } from 'rxjs-spy/operators'
 
 export const initState = ( commands$: Observable<WSCommand & { command: Domain.GetStateCommand }>
-                         , events$: Observable<Domain.AllEvents>
+                         , events$: Observable<Domain.AnyEvent>
                          ): { replies$: Observable<WSReply & { reply: Domain.GetStateReply }>
                             , state$: Observable<Domain.State>
                             } => {
