@@ -1,4 +1,5 @@
 import { initCreate } from './create'
+import { initDelete } from './delete'
 import { initState } from './state'
 import { initUpdate } from './update'
 import { WSCommand, WSReply } from './common'
@@ -64,19 +65,25 @@ export const initApi = (commands$: Observable<WSCommand>):
 	parts = partition(matchCommand('create'))(acceptedCommands$)
 	const createCommands$ = parts[0].pipe(tag(`${tp}:createCommands`)) as
 		Observable<WSCommand & { command: Domain.CreateTeamCommand }>
-	const createEvents$ = initCreate(createCommands$, state$).pipe(tag(`${tp}:createEvents`))
+	const createEvents$ = initCreate(createCommands$).pipe(tag(`${tp}:createEvents`))
+
+	// Handle delete commands
+	parts = partition(matchCommand('delete'))(parts[1])
+	const deleteCommands$ = parts[0].pipe(tag(`${tp}:deleteCommands`)) as
+		Observable<WSCommand & { command: Domain.DeleteTeamCommand }>
+	const deleteEvents$ = initDelete(deleteCommands$).pipe(tag(`${tp}:deleteEvents`))
 
 	// Handle update commands
 	parts = partition(matchCommand('update'))(parts[1])
 	const updateCommands$ = parts[0].pipe(tag(`${tp}:updateCommands`)) as
 		Observable<WSCommand & { command: Domain.UpdateTeamCommand }>
-	const updateEvents$ = initUpdate(updateCommands$, state$)
+	const updateEvents$ = initUpdate(updateCommands$).pipe(tag(`${tp}:updateEvents`))
 
 	// Handle leftover commands as unknown
 	const unknownCommands$ = parts[1] as Observable<WSCommand>
 	const unknownCommandReplies$ = initUnknown(unknownCommands$)
 
-	merge(createEvents$, updateEvents$).subscribe(events$)
+	merge(createEvents$, deleteEvents$, updateEvents$).subscribe(events$)
 
 	return { events$: events$.asObservable(), replies$: merge(genericReplies$, getStateReplies$) }
 }
