@@ -19,5 +19,6 @@ export const initCreate = ( acceptedCreateCommands$: Observable<WSCommand & { co
 			               , id
 			               , name: teamName
 			               }
+			       , type: 'event'
 			       }
 	}))

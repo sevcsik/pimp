@@ -17,6 +17,7 @@ const initUnknown = (commands$: Observable<WSCommand>): Observable<WSReply & { r
 	commands$.pipe(map(command => {
 		const reply: Domain.UnknownCommandReply = { command: command.command
 	                                              , error: 'unknown command'
+		                                          , type: 'reply'
 	                                              }
 		return { to: command.from, reply }
 	}))
@@ -52,11 +53,11 @@ export const initApi = (commands$: Observable<WSCommand>):
 
 	const genericReplies$ = merge(
 		acceptedCommands$.pipe(map(command => {
-			const reply: Domain.AcceptedCommandReply = { accepted: true, command: command.command }
+			const reply: Domain.AcceptedCommandReply = { accepted: true, command: command.command, type: 'reply' }
 			return { to: command.from, reply }
 		})).pipe(tag(`${tp}:acceptedReplies`)),
 		rejectedCommands$.pipe(map(command => {
-			const reply: Domain.InvalidCommandReply = { command: command.command, error: 'invalid command' }
+			const reply: Domain.InvalidCommandReply = { command: command.command, error: 'invalid command', type: 'reply' }
 			return { to: command.from, reply }
 		})).pipe(tag(`${tp}:rejectedReplies`))
 	).pipe(tag(`${tp}:replies`))

@@ -19,7 +19,7 @@ export const initState = ( commands$: Observable<WSCommand & { command: Domain.G
 	const replies$ = commands$
 		.pipe(withLatestFrom(state$))
 		.pipe(map(([ command, state ]) => {
-			const reply: Domain.GetStateReply = { command: command.command, state }
+			const reply: Domain.GetStateReply = { command: command.command, state, type: 'reply' }
 			return { to: command.from, reply }
 		}))
 

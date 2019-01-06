@@ -12,5 +12,6 @@ export const initDelete = ( acceptedDeleteCommands$: Observable<WSCommand & { co
 		{ context: 'team'
 		, id: teamId
 		, name: 'deleted'
+		, type: 'event'
 		}
 	)))

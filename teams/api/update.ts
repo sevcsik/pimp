@@ -16,5 +16,6 @@ export const initUpdate = ( acceptedUpdateCommands$: Observable<WSCommand & { co
 		        , id: teamId
 		        , name: teamName
 		        }
+		, type: 'event'
 		}
 	)))
