@@ -62,6 +62,7 @@
     "@types/uuid": "^3.4.4",
     "cyclejs-utils": "^4.0.2",
     "cyclic-router": "^6.0.0",
+    "rxjs-spy": "^7.5.0",
     "switch-path": "^1.2.0",
     "uuid": "^3.3.2",
     "xstream": "^11.7.0"
