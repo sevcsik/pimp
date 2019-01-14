@@ -1,7 +1,7 @@
 import 'symbol-observable'; // Polyfill required to make Observable.from(Stream) work.
 
 import * as Domain from '../../domain';
-import { getIntents$, isAddFormSubmitIntent } from './intents';
+import { getIntents$, isAddTeamSubmitIntent } from './intents';
 import { getState$ } from './model/state';
 import { view } from './view';
 import { makeWebsocketDriver } from './infra/websocketDriver';
@@ -37,25 +37,24 @@ const main = ({ dom, ws: ws$ }: Sources) => {
     const events$ = ws$
         .pipe(filter(Domain.matchEvents))
         .pipe(tag(`${tp}:events`));
+    const intents$ = getIntents$(dom).pipe(tag(`${tp}:intents`));
     const { commands$: getStateCommands$, state$ } = getState$(
         events$,
-        replies$
+        replies$,
+        intents$
     );
-    const intents$ = getIntents$(dom).pipe(tag(`${tp}:intents`));
     const view$ = view(state$.pipe(tag(`${tp}:state`)));
 
     // TODO: move this to model, add validation
-    const addNewCommands$ = intents$
-        .pipe(filter(isAddFormSubmitIntent))
-        .pipe(
-            map(({ email, teamName }) => ({
-                context: 'team',
-                email,
-                name: 'create',
-                teamName,
-                type: 'command'
-            }))
-        );
+    const addNewCommands$ = intents$.pipe(filter(isAddTeamSubmitIntent)).pipe(
+        map(({ email, teamName }) => ({
+            context: 'team',
+            email,
+            name: 'create',
+            teamName,
+            type: 'command'
+        }))
+    );
 
     return { dom: view$, ws: merge(addNewCommands$, getStateCommands$) };
 };
