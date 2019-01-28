@@ -1,17 +1,26 @@
 import { makeWebsocketServerDriver } from './drivers/websocketServerDriver'
-import { Command, Event, Reply } from './shared/domain'
+import { AnyCommand, AnyEvent, AnyReply } from './shared/domain'
+import { validateCommand } from './shared/validation'
 
 import { run } from '@cycle/rxjs-run'
+import { Observable } from 'rxjs'
+import { map } from 'rxjs/operators'
 import { create as createSpy } from 'rxjs-spy'
 import { defaults } from 'lodash/fp'
 import * as WebSocket from 'ws'
 
-// dummy echo main fn
-const main = (drivers: any): any => drivers
+type Sinks = { ws: Observable<AnyEvent | AnyReply> }
+type Sources = { ws: Observable<AnyCommand> }
+
+const main = ({ ws }: Sources): Sinks => {
+    const replies$ = ws.pipe(map(validateCommand))
+
+    return { ws: replies$ }
+}
 
 const onConnection = (client: WebSocket) => {
     const drivers = {
-        ws: makeWebsocketServerDriver<Command, Event | Reply>(client)
+        ws: makeWebsocketServerDriver<AnyCommand, AnyEvent | AnyReply>(client)
     }
 
     run(main, drivers)
