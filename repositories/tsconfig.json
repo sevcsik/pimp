@@ -1,0 +1,13 @@
+{
+	"compilerOptions": {
+		"module": "commonjs",
+		"noEmit": true,
+		"noImplicitAny": true,
+		"strictNullChecks": true,
+		"sourceMap": true,
+		"target": "esnext",
+		"types": [ "node" ]
+	},
+	"files": [ "server.ts" ],
+	"exclude": [ "node_modules" ]
+}
