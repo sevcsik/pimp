@@ -50,4 +50,3 @@ export type AnyReply = Replies.CommandAccepted
                      | Replies.CommandRejected
 
 export interface ValidationError { field: string, reason: string }
-

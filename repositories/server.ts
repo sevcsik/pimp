@@ -1,10 +1,11 @@
 import { makeWebsocketServerDriver } from './drivers/websocketServerDriver'
 import { AnyCommand, AnyEvent, AnyReply } from './shared/domain'
-import { validateCommand } from './shared/validation'
+import { validateCommand } from './shared/validateCommand'
+import { executeCommand } from './shared/executeCommand'
 
 import { run } from '@cycle/rxjs-run'
-import { Observable } from 'rxjs'
-import { map } from 'rxjs/operators'
+import { Observable, merge } from 'rxjs'
+import { map, filter } from 'rxjs/operators'
 import { create as createSpy } from 'rxjs-spy'
 import { defaults } from 'lodash/fp'
 import * as WebSocket from 'ws'
@@ -14,8 +15,10 @@ type Sources = { ws: Observable<AnyCommand> }
 
 const main = ({ ws }: Sources): Sinks => {
     const replies$ = ws.pipe(map(validateCommand))
+    const validCommands$ = ws.pipe(filter(cmd => validateCommand(cmd).name === 'command accepted'))
+    const events$ = validCommands$.pipe(map(executeCommand))
 
-    return { ws: replies$ }
+    return { ws: merge(events$, replies$) }
 }
 
 const onConnection = (client: WebSocket) => {
