@@ -1,4 +1,5 @@
-import { AnyCommand, AnyEvent } from './domain'
+import { AnyCommand } from './commands'
+import { AnyEvent } from './events'
 
 import * as uuid from 'uuid'
 
@@ -11,10 +12,9 @@ export const executeCommand = (command: AnyCommand): AnyEvent => {
             return { _type: 'event'
                    , _id: eventId
                    , name: 'repository created'
-                   , repository: { _type: 'repository'
-                                 , _id: uuid.v1()
-                                 , repoName: command.repoName
-                                 , provider: command.provider
+                   , repository: { id: uuid.v1()
+                                 , name: command.fields.name
+                                 , provider: command.fields.provider
                                  }
                    }
 
@@ -22,10 +22,9 @@ export const executeCommand = (command: AnyCommand): AnyEvent => {
             return { _type: 'event'
                    , _id: eventId
                    , name: 'repository updated'
-                   , repository: { _type: 'repository'
-                                 , _id: command.id
-                                 , repoName: command.repoName
-                                 , provider: command.provider
+                   , repository: { id: command.id
+                                 , name: command.fields.name
+                                 , provider: command.fields.provider
                                  }
                    }
 

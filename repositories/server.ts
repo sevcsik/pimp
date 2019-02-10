@@ -1,5 +1,7 @@
 import { makeWebsocketServerDriver } from './drivers/websocketServerDriver'
-import { AnyCommand, AnyEvent, AnyReply } from './shared/domain'
+import { AnyCommand } from './shared/commands'
+import { AnyEvent } from './shared/events'
+import { AnyReply } from './shared/replies'
 import { validateCommand } from './shared/validateCommand'
 import { executeCommand } from './shared/executeCommand'
 
