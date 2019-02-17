@@ -5,7 +5,7 @@ import * as uuid from 'uuid'
 
 declare function assertNever (n: never): never
 
-export const executeCommand = (command: AnyCommand): AnyEvent => {
+export const executeCommand = (command: AnyCommand): (AnyEvent | null) => {
     const eventId = uuid.v1()
     switch (command.name) {
         case 'create repository':
@@ -18,6 +18,15 @@ export const executeCommand = (command: AnyCommand): AnyEvent => {
                                  }
                    }
 
+        case 'get state': return null
+
+        case 'remove repository':
+            return { _type: 'event'
+                   , _id: 'eventId'
+                   , name: 'repository removed'
+                   , id: command.id
+                   }
+
         case 'update repository':
             return { _type: 'event'
                    , _id: eventId
@@ -26,13 +35,6 @@ export const executeCommand = (command: AnyCommand): AnyEvent => {
                                  , name: command.fields.name
                                  , provider: command.fields.provider
                                  }
-                   }
-
-        case 'remove repository':
-            return { _type: 'event'
-                   , _id: 'eventId'
-                   , name: 'repository removed'
-                   , id: command.id
                    }
 
         default: return assertNever(command)

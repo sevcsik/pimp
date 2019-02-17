@@ -42,6 +42,8 @@ export const validateCommand = (command: AnyCommand): AnyReply => {
             return command.id
                 ? { _type: 'reply', command, name: 'command accepted' }
                 : { _type: 'reply', command, name: 'command rejected', reason: 'id is missing' }
+        case 'get state':
+            return { _type: 'reply', command, name: 'command accepted' }
         default: return { _type: 'reply', command, name: 'command rejected', reason: 'unknown command' }
     }
 }

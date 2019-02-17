@@ -1,15 +1,16 @@
-import { makeWebsocketServerDriver } from './drivers/websocketServerDriver'
 import { AnyCommand } from './shared/commands'
 import { AnyEvent } from './shared/events'
-import { AnyReply } from './shared/replies'
-import { validateCommand } from './shared/validateCommand'
+import { AnyReply, Replies } from './shared/replies'
 import { executeCommand } from './shared/executeCommand'
+import { makeWebsocketServerDriver } from './drivers/websocketServerDriver'
+import { validateCommand } from './shared/validateCommand'
+import { reducer, initialState } from './shared/state'
 
 import { run } from '@cycle/rxjs-run'
 import { Observable, merge } from 'rxjs'
-import { map, filter } from 'rxjs/operators'
+import { map, filter, scan, withLatestFrom } from 'rxjs/operators'
 import { create as createSpy } from 'rxjs-spy'
-import { defaults } from 'lodash/fp'
+import { defaults, isNull, iteratee, negate } from 'lodash/fp'
 import * as WebSocket from 'ws'
 
 type Sinks = { ws: Observable<AnyEvent | AnyReply> }
@@ -18,9 +19,15 @@ type Sources = { ws: Observable<AnyCommand> }
 const main = ({ ws }: Sources): Sinks => {
     const replies$ = ws.pipe(map(validateCommand))
     const validCommands$ = ws.pipe(filter(cmd => validateCommand(cmd).name === 'command accepted'))
-    const events$ = validCommands$.pipe(map(executeCommand))
+    const events$ = validCommands$.pipe(map(executeCommand)).pipe(filter(negate(isNull)))
+    const state$ = events$.pipe(scan(reducer, initialState))
+    const stateReplies$ = validCommands$
+        .pipe(filter(iteratee({ name: 'get state' })))
+        .pipe(withLatestFrom(state$))
+        .pipe(map(([ command, state ]) => ({ _type: 'reply', command, name: 'state', state } as Replies.State)))
 
-    return { ws: merge(events$, replies$) }
+    return { ws: merge(events$, replies$, stateReplies$) }
+
 }
 
 const onConnection = (client: WebSocket) => {
