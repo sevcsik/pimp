@@ -8,8 +8,9 @@ import { reducer, initialState } from './shared/state'
 
 import { run } from '@cycle/rxjs-run'
 import { Observable, merge } from 'rxjs'
-import { map, filter, scan, withLatestFrom } from 'rxjs/operators'
+import { map, filter, scan, startWith, withLatestFrom } from 'rxjs/operators'
 import { create as createSpy } from 'rxjs-spy'
+import { tag } from 'rxjs-spy/operators'
 import { defaults, isNull, iteratee, negate } from 'lodash/fp'
 import * as WebSocket from 'ws'
 
@@ -20,10 +21,15 @@ const main = ({ ws }: Sources): Sinks => {
     const replies$ = ws.pipe(map(validateCommand))
     const validCommands$ = ws.pipe(filter(cmd => validateCommand(cmd).name === 'command accepted'))
     const events$ = validCommands$.pipe(map(executeCommand)).pipe(filter(negate(isNull)))
-    const state$ = events$.pipe(scan(reducer, initialState))
+
+    const state$ = events$
+        .pipe(startWith(initialState))
+        .pipe(scan(reducer))
+
     const stateReplies$ = validCommands$
-        .pipe(filter(iteratee({ name: 'get state' })))
+        .pipe(filter(cmd => cmd.name === 'get state'))
         .pipe(withLatestFrom(state$))
+        .pipe(tag('server:getStateCommands'))
         .pipe(map(([ command, state ]) => ({ _type: 'reply', command, name: 'state', state } as Replies.State)))
 
     return { ws: merge(events$, replies$, stateReplies$) }
