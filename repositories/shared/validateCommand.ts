@@ -4,6 +4,13 @@ import { AnyReply } from './replies'
 
 import { cond, contains, defaults, isEmpty, flow, flatMap, includes, lt, negate, size, toPairs, __, T } from 'lodash/fp'
 
+export interface InvalidField { field: string, reason: string }
+export interface InvalidFields { _type: 'invalid fields', invalidFields: ReadonlyArray<InvalidField> }
+export interface IdMissing { _type: 'id is missing' }
+export interface UnknownCommand { _type: 'unknown command' }
+export type ValidationFailureReason = InvalidFields | IdMissing | UnknownCommand
+export type ValidationResult = ValidationFailureReason | null
+
 const supportedProviders = [ 'bitbucket', 'github' ]
 
 const validateRepoName = cond(
@@ -24,11 +31,9 @@ const validateProvider = cond(
 const validateRepositoryFields = (fields: RepositoryFields) =>
     [ ...validateRepoName(fields.name), ...validateProvider(fields.provider) ]
 
-const defaultFields = { name: ''
-                      , provider: ''
-                      }
+const defaultFields = { name: '', provider: '' }
 
-export const validateCommand = (command: AnyCommand): AnyReply => {
+export const validateCommand = (command: AnyCommand): ValidationResult => {
     switch (command.name) {
         case 'create repository':
         case 'update repository':
@@ -36,14 +41,14 @@ export const validateCommand = (command: AnyCommand): AnyReply => {
             // TODO: this should be automated... (swagger?)
             const validationErrors = flow(defaults(defaultFields), validateRepositoryFields)(command.fields)
             return validationErrors.length === 0
-                ? { _type: 'reply', command, name: 'command accepted' }
-                : { _type: 'reply', command, name: 'command rejected', reason: 'invalid fields', validationErrors }
+                ? null
+                : { _type: 'invalid fields', invalidFields: validationErrors }
         case 'remove repository':
             return command.id
-                ? { _type: 'reply', command, name: 'command accepted' }
-                : { _type: 'reply', command, name: 'command rejected', reason: 'id is missing' }
+                ? null
+                : { _type: 'id is missing' }
         case 'get state':
-            return { _type: 'reply', command, name: 'command accepted' }
-        default: return { _type: 'reply', command, name: 'command rejected', reason: 'unknown command' }
+            return null
+        default: return { _type: 'unknown command' }
     }
 }

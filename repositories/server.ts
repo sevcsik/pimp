@@ -18,9 +18,20 @@ type Sinks = { ws: Observable<AnyEvent | AnyReply> }
 type Sources = { ws: Observable<AnyCommand> }
 
 const main = ({ ws }: Sources): Sinks => {
-    const replies$ = ws.pipe(map(validateCommand))
-    const validCommands$ = ws.pipe(filter(cmd => validateCommand(cmd).name === 'command accepted'))
-    const events$ = validCommands$.pipe(map(executeCommand)).pipe(filter(negate(isNull)))
+    const replies$ = ws
+        .pipe(map(command => {
+            const validationResult = validateCommand(command)
+            return validationResult === null
+                ? { _type: 'reply', command, name: 'command accepted' }
+                : { _type: 'reply', command, name: 'command rejected', reason: validationResult }
+        }))
+
+    const validCommands$ = ws
+        .pipe(filter(cmd => validateCommand(cmd) === null))
+
+    const events$ = validCommands$
+        .pipe(map(executeCommand))
+        .pipe(filter(negate(isNull)))
 
     const state$ = events$
         .pipe(startWith(initialState))
