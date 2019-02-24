@@ -1,51 +1,33 @@
-import { AnyCommand } from './shared/commands'
-import { AnyEvent } from './shared/events'
-import { AnyReply, Replies } from './shared/replies'
-import { executeCommand } from './shared/executeCommand'
-import { makeWebsocketServerDriver } from './drivers/websocketServerDriver'
-import { validateCommand } from './shared/validateCommand'
-import { reducer, initialState } from './shared/state'
+// This polyfill is needed so Observable.of() works on non-RxJS observables (required by Cycle.js).
+// It needs to be imported before anything else
+import 'symbol-observable'
 
+import { mkMain } from 'framework/server'
+
+import { defaults } from 'lodash/fp'
 import { run } from '@cycle/rxjs-run'
-import { Observable, merge } from 'rxjs'
-import { map, filter, scan, startWith, withLatestFrom } from 'rxjs/operators'
 import { create as createSpy } from 'rxjs-spy'
-import { tag } from 'rxjs-spy/operators'
-import { defaults, isNull, iteratee, negate } from 'lodash/fp'
 import * as WebSocket from 'ws'
 
-type Sinks = { ws: Observable<AnyEvent | AnyReply> }
-type Sources = { ws: Observable<AnyCommand> }
+import { AnyCommand } from './shared/commands'
+import { AnyEvent } from './shared/events'
+import { AnyReply } from './shared/replies'
+import { executeCommand } from './shared/executeCommand'
+import { initialState, reducer, State } from './shared/state'
+import { validateCommand, ValidationFailureReason } from './shared/validateCommand'
+import { makeWebsocketServerDriver } from './drivers/websocketServerDriver'
 
-const main = ({ ws }: Sources): Sinks => {
-    const replies$ = ws
-        .pipe(map(command => {
-            const validationResult = validateCommand(command)
-            return validationResult === null
-                ? { _type: 'reply', command, name: 'command accepted' }
-                : { _type: 'reply', command, name: 'command rejected', reason: validationResult }
-        }))
-
-    const validCommands$ = ws
-        .pipe(filter(cmd => validateCommand(cmd) === null))
-
-    const events$ = validCommands$
-        .pipe(map(executeCommand))
-        .pipe(filter(negate(isNull)))
-
-    const state$ = events$
-        .pipe(startWith(initialState))
-        .pipe(scan(reducer))
-
-    const stateReplies$ = validCommands$
-        .pipe(filter(cmd => cmd.name === 'get state'))
-        .pipe(withLatestFrom(state$))
-        .pipe(tag('server:getStateCommands'))
-        .pipe(map(([ command, state ]) => ({ _type: 'reply', command, name: 'state', state } as Replies.State)))
-
-    return { ws: merge(events$, replies$, stateReplies$) }
-
-}
+const main = mkMain< AnyCommand
+                   , AnyEvent
+                   , AnyReply
+                   , ValidationFailureReason
+                   , State
+                   >
+                   ( validateCommand
+                   , executeCommand
+                   , reducer
+                   , initialState
+                   )
 
 const onConnection = (client: WebSocket) => {
     const drivers = {

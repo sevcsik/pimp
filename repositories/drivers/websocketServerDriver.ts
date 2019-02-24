@@ -1,5 +1,3 @@
-import '@cycle/rxjs-run'
-
 import * as WebSocket from 'ws'
 import { Observable, ObservableInput, from, Subscriber } from 'rxjs'
 import { tag } from 'rxjs-spy/operators'

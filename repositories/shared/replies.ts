@@ -13,5 +13,3 @@ export namespace Replies {
 export type AnyReply = Replies.CommandAccepted
                      | Replies.CommandRejected
                      | Replies.State
-
-export interface ValidationError { field: string, reason: string }
