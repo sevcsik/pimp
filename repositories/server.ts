@@ -2,7 +2,7 @@
 // It needs to be imported before anything else
 import 'symbol-observable'
 
-import { mkMain, mkWebsocketServerDriver } from 'framework/server'
+import { mkMain, mkWebsocketServerDriver } from '@pimp/framework/server'
 
 import { defaults } from 'lodash/fp'
 import { run } from '@cycle/rxjs-run'

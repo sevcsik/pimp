@@ -1,4 +1,4 @@
-import { Event } from 'framework/shared'
+import { Event } from '@pimp/framework/shared'
 
 import { Repository, RepositoryId } from './objects'
 

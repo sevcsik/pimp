@@ -1,4 +1,4 @@
-import { Command } from 'framework/shared'
+import { Command } from '@pimp/framework/shared'
 
 import { RepositoryFields, RepositoryId } from './objects'
 

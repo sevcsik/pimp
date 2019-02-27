@@ -1,4 +1,4 @@
-import { Command, Reply } from 'framework/shared'
+import { Command, Reply } from '@pimp/framework/shared'
 import { ValidationFailureReason } from './validateCommand'
 
 export interface CommandAccepted extends Reply { name: 'command accepted' }
