@@ -47,8 +47,6 @@ export const validateCommand = (command: AnyCommand): ValidationResult => {
             return command.id
                 ? null
                 : { _type: 'id is missing' }
-        case 'get state':
-            return null
         default: return { _type: 'unknown command' }
     }
 }

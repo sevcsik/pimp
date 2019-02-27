@@ -1,10 +1,10 @@
 export { Command } from './commands'
 export { Event } from './events'
-export { Reply } from './replies'
-
+export { Reply, State as StateReply } from './replies'
 import { AnyBuiltinCommand, Command } from './commands'
-import { Event } from './events'
 import { AnyBuiltinReply, Reply, State as StateReply } from './replies'
+import { Event } from './events'
+import { mkExecuteCommand, ExecuteCommandFn } from './executeCommand'
 import { mkValidateCommand, ValidateCommandFn } from './validateCommand'
 
 import { Observable, merge } from 'rxjs'
@@ -14,9 +14,6 @@ import { tag } from 'rxjs-spy/operators'
 import { defaults, isNull, iteratee, negate } from 'lodash/fp'
 import * as WebSocket from 'ws'
 
-export interface ExecuteCommandFn<AnyCommand, AnyEvent> {
-    (command: AnyCommand): (AnyEvent | null)
-}
 
 export interface MainFn<AnyCommand, AnyEvent, AnyReply> {
     (sources: Sources<AnyCommand>): Sinks<AnyEvent, AnyReply>
@@ -64,8 +61,9 @@ export function mkMain
         const validCommands$ = ws
             .pipe(filter(command => validateCommandWithBuiltins(command) === null))
 
+        const executeCommandWithBuiltins = mkExecuteCommand(executeCommand)
         const events$ = validCommands$
-            .pipe(map(executeCommand))
+            .pipe(map(executeCommandWithBuiltins))
             .pipe(filter(negate(isNull)))
 
         const state$ = events$

@@ -1,5 +1,4 @@
 import { AnyEvent } from './events'
-import { Command } from './commands'
 import { Repository } from './objects'
 
 import { filter, iteratee, negate, concat, takeWhile, takeRightWhile } from 'lodash/fp'

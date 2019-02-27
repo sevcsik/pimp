@@ -1,19 +1,15 @@
+import { Command } from 'framework/shared'
+
 import { RepositoryFields, RepositoryId } from './objects'
 
-export interface Command { _type: 'command', _id: string, name: string }
+export interface CreateRepository extends Command { name: 'create repository', fields: RepositoryFields }
+export interface UpdateRepository extends Command { name: 'update repository'
+                                                  , fields: RepositoryFields
+                                                  , id: RepositoryId
+                                                  }
+export interface RemoveRepository extends Command { name: 'remove repository', id: RepositoryId }
 
-export namespace Commands {
-    export interface CreateRepository extends Command { name: 'create repository', fields: RepositoryFields }
-    export interface GetState extends Command { name: 'get state' }
-    export interface UpdateRepository extends Command { name: 'update repository'
-                                                      , fields: RepositoryFields
-                                                      , id: RepositoryId
-                                                      }
-    export interface RemoveRepository extends Command { name: 'remove repository', id: RepositoryId }
-}
-
-export type AnyCommand = Commands.CreateRepository
-                       | Commands.UpdateRepository
-                       | Commands.RemoveRepository
-                       | Commands.GetState
+export type AnyCommand = CreateRepository
+                       | UpdateRepository
+                       | RemoveRepository
 

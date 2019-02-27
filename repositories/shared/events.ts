@@ -1,6 +1,6 @@
-import { Repository, RepositoryId } from './objects'
+import { Event } from 'framework/shared'
 
-export interface Event { _type: 'event', _id: string, name: string }
+import { Repository, RepositoryId } from './objects'
 
 export interface RepositoryCreated extends Event { name: 'repository created', repository: Repository }
 export interface RepositoryUpdated extends Event { name: 'repository updated', repository: Repository }

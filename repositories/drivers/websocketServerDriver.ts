@@ -19,7 +19,8 @@ export function makeWebsocketServerDriver<I, O>(client: WebSocket) {
     })
 
     return (sink$: Stream<O>): Observable<I> => {
-        from(sink$ as ObservableInput<O>) // Importing rxjs-run makes RxJS support XStream
+        // the symbol-observable polyfill makes this conversion possible, but TS does not know about it
+        from(sink$ as unknown as ObservableInput<O>)
             .pipe(tag('drivers/webSocketServerDriver:outgoingMessages'))
             .subscribe(message => { client.send(JSON.stringify(message), errorHandler) })
         return incomingMessages$.pipe(tag('drivers/websocketServerDriver:incomingMessages'))

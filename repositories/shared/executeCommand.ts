@@ -18,8 +18,6 @@ export const executeCommand = (command: AnyCommand): (AnyEvent | null) => {
                                  }
                    }
 
-        case 'get state': return null
-
         case 'remove repository':
             return { _type: 'event'
                    , _id: 'eventId'
