@@ -7,10 +7,33 @@
   resolved "https://registry.yarnpkg.com/@types/circular-json/-/circular-json-0.4.0.tgz#7401f7e218cfe87ad4c43690da5658b9acaf51be"
   integrity sha512-7+kYB7x5a7nFWW1YPBh3KxhwKfiaI4PbZ1RvzBU91LZy7lWJO822CI+pqzSre/DZ7KsCuMKdHnLHHFu8AyXbQg==
 
+"@types/events@*":
+  version "3.0.0"
+  resolved "https://registry.yarnpkg.com/@types/events/-/events-3.0.0.tgz#2862f3f58a9a7f7c3e78d79f130dd4d71c25c2a7"
+  integrity sha512-EaObqwIvayI5a8dCzhFrjKzVwKLxjoG9T6Ppd5CEo07LRKfQ8Yokw54r5+Wq7FaBQ+yXRvQAYPrHwya1/UFt9g==
+
+"@types/lodash@^4.14.119":
+  version "4.14.121"
+  resolved "https://registry.yarnpkg.com/@types/lodash/-/lodash-4.14.121.tgz#9327e20d49b95fc2bf983fc2f045b2c6effc80b9"
+  integrity sha512-ORj7IBWj13iYufXt/VXrCNMbUuCTJfhzme5kx9U/UtcIPdJYuvPDUAlHlbNhz/8lKCLy9XGIZnGrqXOtQbPGoQ==
+
+"@types/node@*":
+  version "11.9.5"
+  resolved "https://registry.yarnpkg.com/@types/node/-/node-11.9.5.tgz#011eece9d3f839a806b63973e228f85967b79ed3"
+  integrity sha512-vVjM0SVzgaOUpflq4GYBvCpozes8OgIIS5gVXVka+OfK3hvnkC1i93U8WiY2OtNE4XUWyyy/86Kf6e0IHTQw1Q==
+
 "@types/stacktrace-js@^0.0.32":
   version "0.0.32"
   resolved "https://registry.yarnpkg.com/@types/stacktrace-js/-/stacktrace-js-0.0.32.tgz#d23e4a36a5073d39487fbea8234cc6186862d389"
   integrity sha512-SdxmlrHfO0BxgbBP9HZWMUo2rima8lwMjPiWm6S0dyKkDa5CseamktFhXg8umu3TPVBkSlX6ZoB5uUDJK89yvg==
+
+"@types/ws@^6.0.1":
+  version "6.0.1"
+  resolved "https://registry.yarnpkg.com/@types/ws/-/ws-6.0.1.tgz#ca7a3f3756aa12f62a0a62145ed14c6db25d5a28"
+  integrity sha512-EzH8k1gyZ4xih/MaZTXwT2xOkPiIMSrhQ9b8wrlX88L0T02eYsddatQlwVFlEPyEqV0ChpdpNnE51QPH6NVT4Q==
+  dependencies:
+    "@types/events" "*"
+    "@types/node" "*"
 
 circular-json@^0.5.0:
   version "0.5.9"
@@ -35,6 +58,13 @@ rxjs-spy@^7.5.0:
     error-stack-parser "^2.0.1"
     stacktrace-gps "^3.0.2"
 
+rxjs@^6.3.3:
+  version "6.4.0"
+  resolved "https://registry.yarnpkg.com/rxjs/-/rxjs-6.4.0.tgz#f3bb0fe7bda7fb69deac0c16f17b50b0b8790504"
+  integrity sha512-Z9Yfa11F6B9Sg/BK9MnqnQ+aQYicPLtilXBp2yUtDt2JRCE0h26d33EnfO3ZxoNxG0T92OUucP3Ct7cpfkdFfw==
+  dependencies:
+    tslib "^1.9.0"
+
 source-map@0.5.6:
   version "0.5.6"
   resolved "https://registry.yarnpkg.com/source-map/-/source-map-0.5.6.tgz#75ce38f52bf0733c5a7f0c118d81334a2bb5f412"
@@ -52,3 +82,20 @@ stacktrace-gps@^3.0.2:
   dependencies:
     source-map "0.5.6"
     stackframe "^1.0.4"
+
+symbol-observable@1.2.0:
+  version "1.2.0"
+  resolved "https://registry.yarnpkg.com/symbol-observable/-/symbol-observable-1.2.0.tgz#c22688aed4eab3cdc2dfeacbb561660560a00804"
+  integrity sha512-e900nM8RRtGhlV36KGEU9k65K3mPb1WV70OdjfxlG2EAuM1noi/E/BaW/uMhL7bPEssK8QV57vN3esixjUvcXQ==
+
+tslib@^1.9.0:
+  version "1.9.3"
+  resolved "https://registry.yarnpkg.com/tslib/-/tslib-1.9.3.tgz#d7e4dd79245d85428c4d7e4822a79917954ca286"
+  integrity sha512-4krF8scpejhaOgqzBEcGM7yDIEfi0/8+8zDRZhNZZ2kjmHJ4hv3zCbQWxoJGz1iw5U0Jl0nma13xzHXcncMavQ==
+
+xstream@^11.10.0:
+  version "11.10.0"
+  resolved "https://registry.yarnpkg.com/xstream/-/xstream-11.10.0.tgz#55a2769672711220fda61678080c130a6401be3d"
+  integrity sha512-jzFCiRqGtrJi2S1/RPxVFgJwWVBzy4suMPBXlhOi0BJC7VvsXgo2yOHWnOasnj24n2Dlj2Mgfl6fJXPOYmpHFA==
+  dependencies:
+    symbol-observable "1.2.0"
