@@ -3,7 +3,9 @@ import { Observable, ObservableInput, from, Subscriber } from 'rxjs'
 import { tag } from 'rxjs-spy/operators'
 import { Stream } from 'xstream'
 
-export function makeWebsocketServerDriver<I, O>(client: WebSocket) {
+const tp = 'framework/webSocketServerDriver'
+
+export function mkWebsocketServerDriver<I, O>(client: WebSocket) {
     let errorHandler: (error: Error) => void
 
     const incomingMessages$: Observable<I> = Observable.create((subscriber: Subscriber<I>) => {
@@ -21,8 +23,8 @@ export function makeWebsocketServerDriver<I, O>(client: WebSocket) {
     return (sink$: Stream<O>): Observable<I> => {
         // the symbol-observable polyfill makes this conversion possible, but TS does not know about it
         from(sink$ as unknown as ObservableInput<O>)
-            .pipe(tag('drivers/webSocketServerDriver:outgoingMessages'))
+            .pipe(tag(`${tp}:outgoingMessages`))
             .subscribe(message => { client.send(JSON.stringify(message), errorHandler) })
-        return incomingMessages$.pipe(tag('drivers/websocketServerDriver:incomingMessages'))
+        return incomingMessages$.pipe(tag(`${tp}:incomingMessages`))
     }
 }

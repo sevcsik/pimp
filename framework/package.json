@@ -4,10 +4,11 @@
   "main": "-",
   "license": "GPLv2",
   "dependencies": {
-    "rxjs-spy": "^7.5.0"
   },
   "peerDependencies": {
     "lodash": "^4.17.11",
-    "rxjs": "^6.3.3"
+    "rxjs": "^6.3.3",
+    "rxjs-spy": "^7.5.0",
+    "ws": "^6.1.3"
   }
 }

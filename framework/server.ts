@@ -1,6 +1,8 @@
 export { Command } from './commands'
 export { Event } from './events'
 export { Reply, State as StateReply } from './replies'
+export { mkWebsocketServerDriver } from './websocketServerDriver'
+
 import { AnyBuiltinCommand, Command } from './commands'
 import { AnyBuiltinReply, Reply, State as StateReply } from './replies'
 import { Event } from './events'
@@ -9,7 +11,6 @@ import { mkValidateCommand, ValidateCommandFn } from './validateCommand'
 
 import { Observable, merge } from 'rxjs'
 import { map, filter, scan, startWith, withLatestFrom } from 'rxjs/operators'
-import { create as createSpy } from 'rxjs-spy'
 import { tag } from 'rxjs-spy/operators'
 import { defaults, isNull, iteratee, negate } from 'lodash/fp'
 import * as WebSocket from 'ws'
@@ -73,7 +74,7 @@ export function mkMain
         const stateReplies$ = validCommands$
             .pipe(filter(cmd => cmd.name === 'get state'))
             .pipe(withLatestFrom(state$))
-            .pipe(tag('server:getStateCommands'))
+            .pipe(tag('framework/server:getStateCommands'))
             .pipe(map(([ command, state ]) => (
                 { _type: 'reply', command, name: 'state', state } as StateReply<State>))
             )

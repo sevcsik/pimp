@@ -2,7 +2,7 @@
 // It needs to be imported before anything else
 import 'symbol-observable'
 
-import { mkMain } from 'framework/server'
+import { mkMain, mkWebsocketServerDriver } from 'framework/server'
 
 import { defaults } from 'lodash/fp'
 import { run } from '@cycle/rxjs-run'
@@ -15,7 +15,6 @@ import { AnyReply } from './shared/replies'
 import { executeCommand } from './shared/executeCommand'
 import { initialState, reducer, State } from './shared/state'
 import { validateCommand, ValidationFailureReason } from './shared/validateCommand'
-import { makeWebsocketServerDriver } from './drivers/websocketServerDriver'
 
 const main = mkMain< AnyCommand
                    , AnyEvent
@@ -31,7 +30,7 @@ const main = mkMain< AnyCommand
 
 const onConnection = (client: WebSocket) => {
     const drivers = {
-        ws: makeWebsocketServerDriver<AnyCommand, AnyEvent | AnyReply>(client)
+        ws: mkWebsocketServerDriver<AnyCommand, AnyEvent | AnyReply>(client)
     }
 
     run(main, drivers)
