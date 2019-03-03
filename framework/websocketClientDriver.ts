@@ -1,7 +1,7 @@
 import { webSocket } from 'rxjs/webSocket';
 import { Stream } from 'xstream';
 
-export const makeWebsocketDriver = (url: string) => {
+export const mkWebsocketClientDriver = (url: string) => {
     const webSocket$ = webSocket(url);
     return (sink$: Stream<any>) => {
         sink$.subscribe({

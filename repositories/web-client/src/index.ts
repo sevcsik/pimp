@@ -1,10 +1,10 @@
 import 'symbol-observable'; // Polyfill required to make Observable.from(Stream) work.
+import { mkWebsocketClientDriver } from '@pimp/framework/websocketClientDriver';
 
 import * as Domain from '../../domain';
 import { getIntents$, isAddTeamSubmitIntent } from './intents';
 import { getState$ } from './model/state';
 import { view } from './view';
-import { makeWebsocketDriver } from './infra/websocketDriver';
 
 import { makeDOMDriver, DOMSource } from '@cycle/dom/lib/es6/rxjs';
 import { iteratee } from 'lodash/fp';
