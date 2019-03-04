@@ -1,20 +1,21 @@
 export { Command } from './commands'
 export { Event } from './events'
+export { Intent } from './intents'
 export { Reply } from './replies'
 export { mkWebsocketClientDriver } from './websocketClientDriver'
 
 import { AnyBuiltinCommand, Command, GetState as GetStateCommand } from './commands'
-import { AnyBuiltinReply, Reply, State as StateReply } from './replies'
 import { Event } from './events'
-import { mkExecuteCommand, ExecuteCommandFn } from './executeCommand'
+import { Intent, AnyBuiltinIntent } from './intents'
+import { AnyBuiltinReply, Reply, State as StateReply } from './replies'
+import { mkExecuteIntent, ExecuteIntentFn } from './executeIntent'
 import { mkValidateCommand, ValidateCommandFn } from './validateCommand'
 
+import { DOMSource } from '@cycle/dom/lib/es6/rxjs';
+import { VNode } from '@cycle/dom'
 import { Observable, merge, of } from 'rxjs'
-import { map, filter, partition, scan, startWith, withLatestFrom } from 'rxjs/operators'
+import { map, filter, scan, startWith, withLatestFrom } from 'rxjs/operators'
 import { tag } from 'rxjs-spy/operators'
-import { defaults, isNull, iteratee, negate } from 'lodash/fp'
-import * as WebSocket from 'ws'
-
 
 export interface MainFn<AnyCommand, AnyEvent, AnyReply> {
     (sources: Sources<AnyReply, AnyEvent>): Sinks<AnyCommand>
@@ -24,8 +25,12 @@ export interface ReducerFn<AnyEvent, State> {
     (state: State, event: AnyEvent): State
 }
 
-export interface Sources<AnyReply, AnyEvent> { ws: Observable<AnyReply | AnyEvent> }
-export interface Sinks<AnyCommand> { ws: Observable<Command> }
+export interface Sources<AnyReply, AnyEvent> { ws: Observable<AnyReply | AnyEvent>
+                                             , dom: DOMSource
+                                             }
+export interface Sinks<AnyCommand> { ws: Observable<Command>
+                                   , dom: Observable<VNode>
+                                   }
 
 export interface ValidateCommandFn<AnyCommand, ValidationFailureReason> {
     (command: AnyCommand): ValidationFailureReason | null
@@ -37,11 +42,12 @@ export function mkMain
     < AnyCommand extends Command
     , AnyEvent extends Event
     , AnyReply extends Reply
+    , AnyIntent extends Intent
     , ValidationFailureReason
     , State
     >
-    ( validateCommand: ValidateCommandFn<AnyCommand, ValidationFailureReason>
-    , executeCommand: ExecuteCommandFn<AnyCommand, AnyEvent>
+    ( executeIntent: ExecuteIntentFn<AnyIntent, AnyCommand>
+    , validateCommand: ValidateCommandFn<AnyCommand, ValidationFailureReason>
     , reducer: ReducerFn<AnyEvent, State>
     , initialState: State
     ): MainFn< AnyCommand | AnyBuiltinCommand
@@ -53,17 +59,21 @@ export function mkMain
         return message._type === "reply"
     }
 
-    return ({ ws }: Sources< AnyReply | AnyBuiltinReply<State, ValidationFailureReason>, AnyEvent>)
+    return ({ ws, dom }: Sources< AnyReply | AnyBuiltinReply<State, ValidationFailureReason>, AnyEvent>)
         : Sinks<AnyCommand | AnyBuiltinCommand> => {
 
         const validateCommandWithBuiltins = mkValidateCommand(validateCommand)
+        const executeIntentWithBuiltins = mkExecuteIntent(executeIntent)
 
-        // DUMMY
-        const outgoingCommands$: Observable<AnyCommand | AnyBuiltinCommand> =
-            of({ _id: "asd", _type: "command", name: "get state" } as GetStateCommand)
-            .pipe(tag(`${tp}:outgoingCommands`))
+        const intents$ = of({ _type: 'intent', name: 'view page' })
+            .pipe(tag(`${tp}:intents`))
 
-        const commandsWithValidationResult$ = outgoingCommands$
+        const commands$ = intents$
+            .pipe(map(executeIntentWithBuiltins))
+            .pipe(filter(command => command !== null))
+            .pipe(tag(`${tp}:commands`))
+
+        const commandsWithValidationResult$ = commands$
             .pipe(map(command => ({ command, validationResult: validateCommandWithBuiltins(command) })))
             .pipe(tag(`${tp}:commandsWithValidationResult`))
 
@@ -85,6 +95,6 @@ export function mkMain
 
         const replies$ = merge(clientSideReplies$, serverSideReplies$)
 
-        return { ws: validCommands$ }
+        return { ws: validCommands$, dom }
     }
 }

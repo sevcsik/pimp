@@ -12,7 +12,6 @@ import { mkValidateCommand, ValidateCommandFn } from './validateCommand'
 import { Observable, merge } from 'rxjs'
 import { map, filter, scan, startWith, withLatestFrom } from 'rxjs/operators'
 import { tag } from 'rxjs-spy/operators'
-import { defaults, isNull, iteratee, negate } from 'lodash/fp'
 import * as WebSocket from 'ws'
 
 
@@ -65,7 +64,7 @@ export function mkMain
         const executeCommandWithBuiltins = mkExecuteCommand(executeCommand)
         const events$ = validCommands$
             .pipe(map(executeCommandWithBuiltins))
-            .pipe(filter(negate(isNull)))
+            .pipe(filter(event => event !== null))
 
         const state$ = events$
             .pipe(startWith(initialState))
