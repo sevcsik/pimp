@@ -17,6 +17,10 @@ import { Observable, merge, of } from 'rxjs'
 import { map, filter, scan, startWith, withLatestFrom } from 'rxjs/operators'
 import { tag } from 'rxjs-spy/operators'
 
+export interface DetermineIntentsFn<AnyIntent> {
+    (dom: DOMSource): Observable<AnyIntent>
+}
+
 export interface MainFn<AnyCommand, AnyEvent, AnyReply> {
     (sources: Sources<AnyReply, AnyEvent>): Sinks<AnyCommand>
 }
@@ -46,7 +50,8 @@ export function mkMain
     , ValidationFailureReason
     , State
     >
-    ( executeIntent: ExecuteIntentFn<AnyIntent, AnyCommand>
+    ( determineIntents: DetermineIntentsFn<AnyIntent>
+    , executeIntent: ExecuteIntentFn<AnyIntent, AnyCommand>
     , validateCommand: ValidateCommandFn<AnyCommand, ValidationFailureReason>
     , reducer: ReducerFn<AnyEvent, State>
     , initialState: State
@@ -62,17 +67,19 @@ export function mkMain
     return ({ ws, dom }: Sources< AnyReply | AnyBuiltinReply<State, ValidationFailureReason>, AnyEvent>)
         : Sinks<AnyCommand | AnyBuiltinCommand> => {
 
-        const validateCommandWithBuiltins = mkValidateCommand(validateCommand)
-        const executeIntentWithBuiltins = mkExecuteIntent(executeIntent)
+        const domIntents$ = determineIntents(dom)
 
-        const intents$ = of({ _type: 'intent', name: 'view page' })
+        const intents$ = domIntents$
+            .pipe(startWith({ _type: 'intent', name: 'builtin view' }))
             .pipe(tag(`${tp}:intents`))
 
+        const executeIntentWithBuiltins = mkExecuteIntent(executeIntent)
         const commands$ = intents$
             .pipe(map(executeIntentWithBuiltins))
             .pipe(filter(command => command !== null))
             .pipe(tag(`${tp}:commands`))
 
+        const validateCommandWithBuiltins = mkValidateCommand(validateCommand)
         const commandsWithValidationResult$ = commands$
             .pipe(map(command => ({ command, validationResult: validateCommandWithBuiltins(command) })))
             .pipe(tag(`${tp}:commandsWithValidationResult`))

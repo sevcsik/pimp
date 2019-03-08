@@ -10,7 +10,7 @@ export function mkExecuteIntent
     (executeIntent: ExecuteIntentFn<AnyIntent, AnyCommand>)
     : ExecuteIntentFn<AnyIntent | AnyBuiltinIntent, AnyCommand | AnyBuiltinCommand> {
 
-    return intent => intent.name === 'view page'
+    return intent => intent.name === 'builtin view'
                    ? mkBuiltinCommand('get state')
                    : executeIntent(intent as AnyIntent)
 }
