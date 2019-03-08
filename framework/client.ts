@@ -7,12 +7,13 @@ export { mkWebsocketClientDriver } from './websocketClientDriver'
 import { AnyBuiltinCommand, Command, GetState as GetStateCommand } from './commands'
 import { Event } from './events'
 import { Intent, AnyBuiltinIntent } from './intents'
-import { AnyBuiltinReply, Reply, State as StateReply } from './replies'
+import { AnyBuiltinReply, CommandRejected, Reply, State as StateReply } from './replies'
 import { mkExecuteIntent, ExecuteIntentFn } from './executeIntent'
 import { mkValidateCommand, ValidateCommandFn } from './validateCommand'
 
 import { DOMSource } from '@cycle/dom/lib/es6/rxjs';
 import { VNode } from '@cycle/dom'
+import { iteratee } from 'lodash/fp'
 import { Observable, merge, of } from 'rxjs'
 import { map, filter, scan, startWith, withLatestFrom } from 'rxjs/operators'
 import { tag } from 'rxjs-spy/operators'
@@ -21,15 +22,25 @@ export interface DetermineIntentsFn<AnyIntent> {
     (dom: DOMSource): Observable<AnyIntent>
 }
 
-export interface MainFn<AnyCommand, AnyEvent, AnyReply> {
-    (sources: Sources<AnyReply, AnyEvent>): Sinks<AnyCommand>
+export interface MainFn<IncomingMessage, OutgoingMessage> {
+    (sources: Sources<IncomingMessage>): Sinks<OutgoingMessage>
 }
 
-export interface ReducerFn<AnyEvent, State> {
-    (state: State, event: AnyEvent): State
+export interface MkStateFn<ServerState, ClientState> {
+    (serverState: ServerState | null): ClientState
 }
 
-export interface Sources<AnyReply, AnyEvent> { ws: Observable<AnyReply | AnyEvent>
+export interface ReducerFn<AnyEvent, AnyReply, ServerState, ClientState, ValidationFailureReason> {
+    ( state: ClientState
+    , update: AnyEvent | AnyReply | AnyBuiltinReply<ServerState, ValidationFailureReason>
+    ): ClientState
+}
+
+export interface RenderStateFn<ClientState> {
+    (state: ClientState): VNode
+}
+
+export interface Sources<IncomingMessage> { ws: Observable<IncomingMessage>
                                              , dom: DOMSource
                                              }
 export interface Sinks<AnyCommand> { ws: Observable<Command>
@@ -48,23 +59,22 @@ export function mkMain
     , AnyReply extends Reply
     , AnyIntent extends Intent
     , ValidationFailureReason
-    , State
+    , ServerState
+    , ClientState
     >
     ( determineIntents: DetermineIntentsFn<AnyIntent>
     , executeIntent: ExecuteIntentFn<AnyIntent, AnyCommand>
     , validateCommand: ValidateCommandFn<AnyCommand, ValidationFailureReason>
-    , reducer: ReducerFn<AnyEvent, State>
-    , initialState: State
-    ): MainFn< AnyCommand | AnyBuiltinCommand
-             , AnyEvent
-             , AnyReply | AnyBuiltinReply<State, ValidationFailureReason>
+    , reducer: ReducerFn<AnyEvent, AnyReply, ServerState, ClientState, ValidationFailureReason>
+    , mkState: MkStateFn<ServerState, ClientState>
+    , renderState: RenderStateFn<ClientState>
+    ): MainFn< AnyEvent | AnyReply | AnyBuiltinReply<ServerState, ValidationFailureReason>
+             , AnyCommand | AnyBuiltinCommand
              > {
 
-    function isReply(message): message is AnyReply | AnyBuiltinReply<State, ValidationFailureReason> {
-        return message._type === "reply"
-    }
+    type IncomingMessage = AnyReply | AnyBuiltinReply<ServerState, ValidationFailureReason> | AnyEvent
 
-    return ({ ws, dom }: Sources< AnyReply | AnyBuiltinReply<State, ValidationFailureReason>, AnyEvent>)
+    return ({ ws, dom }: Sources<IncomingMessage>)
         : Sinks<AnyCommand | AnyBuiltinCommand> => {
 
         const domIntents$ = determineIntents(dom)
@@ -92,16 +102,29 @@ export function mkMain
         const clientSideReplies$ = commandsWithValidationResult$
             .pipe(filter(({ command, validationResult }) => validationResult !== null))
             .pipe(map(({ command, validationResult }) =>
-                ({ _type: 'reply', command, name: 'command rejected', reason: validationResult })
+                ({ _type: 'reply', command, name: 'command rejected', reason: validationResult } as
+                    CommandRejected<ValidationFailureReason>)
             ))
             .pipe(tag(`${tp}:clientSideReplies`))
 
         const serverSideReplies$ = ws
-            .pipe(filter(isReply))
-            .pipe(tag(`${tp}:clientSideReplies`))
+            .pipe(filter((message): message is AnyReply | AnyBuiltinReply<ServerState, ValidationFailureReason> =>
+                message._type === 'reply'
+            ))
+            .pipe(tag(`${tp}:serverSideReplies`))
 
         const replies$ = merge(clientSideReplies$, serverSideReplies$)
+        const events$ = ws.pipe(filter((m: any): m is AnyEvent => m._type === 'event'))
+        const state$ = merge(events$, replies$)
+            .pipe(scan<IncomingMessage, ClientState>((state, msg) => {
+                const isStateReply = (m): m is StateReply<ServerState> => msg._type === 'reply' && msg.name === 'state'
+                return isStateReply(msg) ? mkState(msg.state) : reducer(state, msg)
+            }, mkState(null)))
+            .pipe(startWith(mkState(null)))
+            .pipe(tag(`${tp}:state`))
 
-        return { ws: validCommands$, dom }
+        const dom$ = state$.pipe(map(renderState))
+
+        return { ws: validCommands$, dom: dom$ }
     }
 }
