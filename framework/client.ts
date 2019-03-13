@@ -3,6 +3,8 @@ export { Event } from './events'
 export { Intent } from './intents'
 export { Reply } from './replies'
 export { mkWebsocketClientDriver } from './websocketClientDriver'
+export { DOMSource } from '@cycle/dom/lib/es6/rxjs'
+export { VNode } from '@cycle/dom'
 
 import { AnyBuiltinCommand, Command, GetState as GetStateCommand } from './commands'
 import { Event } from './events'
