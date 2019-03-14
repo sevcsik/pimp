@@ -1,40 +1,52 @@
-import 'symbol-observable' // Polyfill required to make Observable.from(Stream) work.
-import { DOMSource, mkMain, mkWebsocketClientDriver } from '@pimp/framework/client'
+import 'symbol-observable'; // Polyfill required to make Observable.from(Stream) work.
+import {
+    DOMSource,
+    mkMain,
+    mkWebsocketClientDriver
+} from '@pimp/framework/client';
+import { makeDOMDriver } from '@cycle/dom';
+import { run } from '@cycle/rxjs-run';
 
-import { AnyCommand } from '../../shared/commands'
-import { AnyEvent } from '../../shared/events'
-import { AnyIntent } from '../../shared/intents'
-import { determineIntents } from './determineIntents'
-import { executeIntents } from './executeIntents'
-import { mkState, State } from './state'
-import { reducer, State as ServerState } from '../../shared/state'
-import { renderState } from './view'
-import { validateCommand, ValidationFailureReason } from '../../shared/validateCommand'
+import { AnyCommand } from '../../shared/commands';
+import { AnyEvent } from '../../shared/events';
+import { AnyIntent } from '../../shared/intents';
+import { AnyReply } from '../../shared/replies';
+import { determineIntents } from './determineIntents';
+import { executeIntents } from './executeIntents';
+import { mkState, State } from './state';
+import { State as ServerState } from '../../shared/state';
+import { reducer } from './state';
+import { renderState } from './view';
+import {
+    validateCommand,
+    ValidationFailureReason
+} from '../../shared/validateCommand';
 
-
-const spy = createSpy()
-spy.log(/.+/)
+import { create as createSpy } from 'rxjs-spy';
 
 const drivers = {
-    dom: makeDOMDriver('#repositories-manage'),
-    ws: makeWebsocketClientDriver('ws://localhost:8000')
-}
+    ws: mkWebsocketClientDriver('http://localhost:8000'),
+    dom: makeDOMDriver('#repositories-manage')
+};
 
-const main = mkMain< AnyCommand
-                   , AnyEvent
-                   , AnyReply
-                   , AnyIntent
-                   , ValidationFailureReason
-                   , ServerState
-                   , State
-                   >
-                   ( determineIntents
-                   , executeIntents
-                   , validateCommand
-                   , reducer
-                   , mkState
-                   , renderState
-                   )
+const spy = createSpy();
+spy.log(/.+/);
 
+const main = mkMain<
+    AnyCommand,
+    AnyEvent,
+    AnyReply,
+    AnyIntent,
+    ValidationFailureReason,
+    ServerState,
+    State
+>(
+    determineIntents,
+    executeIntents,
+    validateCommand,
+    reducer,
+    mkState,
+    renderState
+);
 
-run(main as any, drivers)
+run(main as any, drivers);

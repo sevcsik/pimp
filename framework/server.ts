@@ -4,7 +4,7 @@ export { Reply, State as StateReply } from './replies'
 export { mkWebsocketServerDriver } from './websocketServerDriver'
 
 import { AnyBuiltinCommand, Command } from './commands'
-import { AnyBuiltinReply, Reply, State as StateReply } from './replies'
+import { AnyBuiltinReply, CommandAccepted, CommandRejected, Reply, State as StateReply } from './replies'
 import { Event } from './events'
 import { mkExecuteCommand, ExecuteCommandFn } from './executeCommand'
 import { mkValidateCommand, ValidateCommandFn } from './validateCommand'
@@ -54,8 +54,9 @@ export function mkMain
             .pipe(map(command => {
                 const validationResult = validateCommandWithBuiltins(command)
                 return validationResult === null
-                    ? { _type: 'reply', command, name: 'command accepted' }
-                    : { _type: 'reply', command, name: 'command rejected', reason: validationResult }
+                    ? { _type: 'reply', command, name: 'command accepted' } as CommandAccepted
+                    : { _type: 'reply', command, name: 'command rejected', reason: validationResult } as
+                        CommandRejected<ValidationFailureReason>
             }))
 
         const validCommands$ = ws
@@ -64,7 +65,7 @@ export function mkMain
         const executeCommandWithBuiltins = mkExecuteCommand(executeCommand)
         const events$ = validCommands$
             .pipe(map(executeCommandWithBuiltins))
-            .pipe(filter(event => event !== null))
+            .pipe(filter(event => event !== null)) as Observable<AnyEvent> // type inference is not smart enough here :(
 
         const state$ = events$
             .pipe(startWith(initialState))

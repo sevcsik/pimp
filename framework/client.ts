@@ -1,7 +1,7 @@
 export { Command } from './commands'
 export { Event } from './events'
 export { Intent } from './intents'
-export { Reply } from './replies'
+export { Reply, AnyBuiltinReply } from './replies'
 export { mkWebsocketClientDriver } from './websocketClientDriver'
 export { DOMSource } from '@cycle/dom/lib/es6/rxjs'
 export { VNode } from '@cycle/dom'
@@ -34,7 +34,7 @@ export interface MkStateFn<ServerState, ClientState> {
 
 export interface ReducerFn<AnyEvent, AnyReply, ServerState, ClientState, ValidationFailureReason> {
     ( state: ClientState
-    , update: AnyEvent | AnyReply | AnyBuiltinReply<ServerState, ValidationFailureReason>
+    , message: AnyEvent | AnyReply | AnyBuiltinReply<ServerState, ValidationFailureReason>
     ): ClientState
 }
 
@@ -86,9 +86,9 @@ export function mkMain
             .pipe(tag(`${tp}:intents`))
 
         const executeIntentWithBuiltins = mkExecuteIntent(executeIntent)
-        const commands$ = intents$
+        const commands$ = (intents$
             .pipe(map(executeIntentWithBuiltins))
-            .pipe(filter(command => command !== null))
+            .pipe(filter(command => command !== null)) as Observable<AnyCommand | AnyBuiltinCommand>)
             .pipe(tag(`${tp}:commands`))
 
         const validateCommandWithBuiltins = mkValidateCommand(validateCommand)
@@ -119,7 +119,8 @@ export function mkMain
         const events$ = ws.pipe(filter((m: any): m is AnyEvent => m._type === 'event'))
         const state$ = merge(events$, replies$)
             .pipe(scan<IncomingMessage, ClientState>((state, msg) => {
-                const isStateReply = (m): m is StateReply<ServerState> => msg._type === 'reply' && msg.name === 'state'
+                const isStateReply = (m: any): m is StateReply<ServerState> =>
+                    msg._type === 'reply' && msg.name === 'state'
                 return isStateReply(msg) ? mkState(msg.state) : reducer(state, msg)
             }, mkState(null)))
             .pipe(startWith(mkState(null)))

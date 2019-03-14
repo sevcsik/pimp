@@ -1,23 +1,22 @@
-import { State } from './state'
+import { Repository } from '../../shared/objects';
+import { State } from './state';
 
-import { VNode } from '@cycle/dom'
+import { VNode } from '@cycle/dom';
 
-const renderRepository = (({ name, provider, repository }): Repository) => (
+const renderRepository = ({ id, name, provider }: Repository) => (
     <li>
         <pimp-repository data-id={id}>
-            <span class="name-field">{name}</span>
-            <span class="provider-field">{provider}</span>
-            <button class="edit-button">Edit</button>
-            <button class="delete-button">Delete</button>
+            <span className="name-field">{name}</span>
+            <span className="provider-field">{provider}</span>
+            <button className="edit-button">Edit</button>
+            <button className="delete-button">Delete</button>
         </pimp-repository>
     </li>
-)
+);
 
 export const renderState = (state: State) => (
     <div>
         <h1>Repositories</h1>
-        <ul>
-            state.repositories.map(renderRepository)
-        </ul>
+        <ul>state.repositories.map(renderRepository)</ul>
     </div>
-)
+);
