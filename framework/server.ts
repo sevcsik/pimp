@@ -1,6 +1,7 @@
 export { Command } from './commands'
 export { Event } from './events'
 export { Reply, State as StateReply } from './replies'
+export { mkSharedSubjectEventQueueDriver } from './sharedSubjectEventQueueDriver'
 export { mkWebsocketServerDriver } from './websocketServerDriver'
 
 import { AnyBuiltinCommand, Command } from './commands'
@@ -16,15 +17,15 @@ import * as WebSocket from 'ws'
 
 
 export interface MainFn<AnyCommand, AnyEvent, AnyReply> {
-    (sources: Sources<AnyCommand>): Sinks<AnyEvent, AnyReply>
+    (sources: Sources<AnyCommand, AnyEvent>): Sinks<AnyEvent, AnyReply>
 }
 
 export interface ReducerFn<AnyEvent, State> {
     (state: State, event: AnyEvent): State
 }
 
-export interface Sources<AnyCommand> { ws: Observable<AnyCommand> }
-export interface Sinks<AnyEvent, AnyReply> { ws: Observable<AnyEvent | AnyReply> }
+export interface Sources<AnyCommand, AnyEvent> { ws$: Observable<AnyCommand>, events$: Observable<AnyEvent> }
+export interface Sinks<AnyEvent, AnyReply> { ws$: Observable<AnyEvent | AnyReply>, events$: Observable<AnyEvent> }
 
 export interface ValidateCommandFn<AnyCommand, ValidationFailureReason> {
     (command: AnyCommand): ValidationFailureReason | null
@@ -46,11 +47,11 @@ export function mkMain
              , AnyReply | AnyBuiltinReply<State, ValidationFailureReason>
              > {
 
-    return ({ ws }: Sources<AnyCommand | AnyBuiltinCommand>)
+    return ({ ws$, events$: externalEvents$ }: Sources<AnyCommand | AnyBuiltinCommand, AnyEvent>)
         : Sinks<AnyEvent, AnyReply | AnyBuiltinReply<State, ValidationFailureReason>> => {
 
         const validateCommandWithBuiltins = mkValidateCommand(validateCommand)
-        const replies$ = ws
+        const replies$ = ws$
             .pipe(map(command => {
                 const validationResult = validateCommandWithBuiltins(command)
                 return validationResult === null
@@ -59,7 +60,7 @@ export function mkMain
                         CommandRejected<ValidationFailureReason>
             }))
 
-        const validCommands$ = ws
+        const validCommands$ = ws$
             .pipe(filter(command => validateCommandWithBuiltins(command) === null))
 
         const executeCommandWithBuiltins = mkExecuteCommand(executeCommand)
@@ -67,7 +68,7 @@ export function mkMain
             .pipe(map(executeCommandWithBuiltins))
             .pipe(filter(event => event !== null)) as Observable<AnyEvent> // type inference is not smart enough here :(
 
-        const state$ = events$
+        const state$ = merge(events$, externalEvents$)
             .pipe(startWith(initialState))
             .pipe(scan(reducer))
 
@@ -79,6 +80,6 @@ export function mkMain
                 { _type: 'reply', command, name: 'state', state } as StateReply<State>))
             )
 
-        return { ws: merge(events$, replies$, stateReplies$) }
+        return { ws$: merge(events$, externalEvents$, replies$, stateReplies$), events$ }
     }
 }

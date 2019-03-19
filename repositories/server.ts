@@ -2,9 +2,10 @@
 // It needs to be imported before anything else
 import 'symbol-observable'
 
-import { mkMain, mkWebsocketServerDriver } from '@pimp/framework/server'
+import { mkMain, mkWebsocketServerDriver, mkSharedSubjectEventQueueDriver } from '@pimp/framework/server'
 
 import { defaults } from 'lodash/fp'
+import { ReplaySubject } from 'rxjs'
 import { run } from '@cycle/rxjs-run'
 import { create as createSpy } from 'rxjs-spy'
 import * as WebSocket from 'ws'
@@ -28,10 +29,12 @@ const main = mkMain< AnyCommand
                    , initialState
                    )
 
+const eventQueue = new ReplaySubject<AnyEvent>()
+
 const onConnection = (client: WebSocket) => {
-    const drivers = {
-        ws: mkWebsocketServerDriver<AnyCommand, AnyEvent | AnyReply>(client)
-    }
+    const drivers = { events$: mkSharedSubjectEventQueueDriver<AnyEvent>(eventQueue)
+                    , ws$: mkWebsocketServerDriver<AnyCommand, AnyEvent | AnyReply>(client)
+                    }
 
     run(main, drivers)
 }
