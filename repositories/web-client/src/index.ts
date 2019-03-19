@@ -25,12 +25,9 @@ import {
 import { create as createSpy } from 'rxjs-spy';
 
 const drivers = {
-    ws: mkWebsocketClientDriver('http://localhost:8000'),
+    ws: mkWebsocketClientDriver('ws://localhost:8001'),
     dom: makeDOMDriver('#repositories-manage')
 };
-
-const spy = createSpy();
-spy.log(/.+/);
 
 const main = mkMain<
     AnyCommand,
@@ -50,3 +47,5 @@ const main = mkMain<
 );
 
 run(main as any, drivers);
+
+createSpy();

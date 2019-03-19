@@ -17,6 +17,6 @@ const renderRepository = ({ id, name, provider }: Repository) => (
 export const renderState = (state: State) => (
     <div>
         <h1>Repositories</h1>
-        <ul>state.repositories.map(renderRepository)</ul>
+        <ul>{state.repositories.map(renderRepository)}</ul>
     </div>
 );

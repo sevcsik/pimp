@@ -43,4 +43,5 @@ const serverOptions = defaults(
 
 const server = new WebSocket.Server(serverOptions)
 server.on('connection', onConnection)
-createSpy().log()
+
+createSpy()
