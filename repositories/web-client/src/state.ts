@@ -7,9 +7,14 @@ import {
     State as ServerState,
     reducer as eventReducer
 } from '../../shared/state';
-import { RepositoryId, RepositoryFields } from '../../shared/objects';
+import {
+    Repository,
+    RepositoryFields,
+    RepositoryId
+} from '../../shared/objects';
 
 import { AnyBuiltinIntent, AnyBuiltinReply } from '@pimp/framework/client';
+import { find } from 'lodash/fp';
 
 declare function assertNever(x: never): never;
 
@@ -41,7 +46,24 @@ const intentReducer = (state: State, intent: AnyIntent | AnyBuiltinIntent) => {
                 ]
             };
         case 'edit':
-            throw new Error('Intent not implemented: ' + intent.name);
+            const repository = find({ id: intent.id }, state.repositories);
+            if (repository) {
+                return {
+                    ...state,
+                    unsavedRepositories: [
+                        ...state.unsavedRepositories,
+                        {
+                            id: intent.id,
+                            fields: {
+                                name: repository.name,
+                                provider: repository.provider
+                            }
+                        }
+                    ]
+                };
+            } else {
+                throw new Error('Cannot find repository to edit');
+            }
         case 'remove':
         case 'save':
         case 'builtin view':

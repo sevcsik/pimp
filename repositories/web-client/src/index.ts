@@ -1,10 +1,6 @@
 import 'symbol-observable'; // Polyfill required to make Observable.from(Stream) work.
-import {
-    DOMSource,
-    mkMain,
-    mkWebsocketClientDriver
-} from '@pimp/framework/client';
-import { makeDOMDriver } from '@cycle/dom';
+import { mkMain, mkWebsocketClientDriver } from '@pimp/framework/client';
+import { DOMSource, makeDOMDriver } from '@cycle/dom';
 import { run } from '@cycle/rxjs-run';
 
 import { AnyCommand } from '../../shared/commands';
