@@ -10,9 +10,6 @@
     "@types/uuid": "^3.3.2",
     "cycle-scripts-one-fits-all": ">=6.0.0",
     "cyclejs-test-helpers": "^4.0.0",
-    "husky": "^1.2.0",
-    "lint-staged": "^8.1.0",
-    "prettier": "^1.15.3",
     "rxjs": "^6.4.0",
     "rxjs-spy": "^7.5.0",
     "snabbdom-looks-like": "^1.0.5",
@@ -26,21 +23,6 @@
     "build": "cycle-scripts build",
     "eject": "cycle-scripts eject",
     "clean": "cycle-scripts clean"
-  },
-  "lint-staged": {
-    "*.{js,jsx,ts,tsx}": [
-      "prettier --write",
-      "git add"
-    ]
-  },
-  "prettier": {
-    "tabWidth": 4,
-    "singleQuote": true
-  },
-  "husky": {
-    "hooks": {
-      "pre-commit": "lint-staged"
-    }
   },
   "nyc": {
     "instrument": false,
