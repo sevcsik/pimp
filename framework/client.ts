@@ -1,10 +1,8 @@
-export { Command } from './commands'
+export { Command, AnyBuiltinCommand } from './commands'
 export { Event } from './events'
-export { Intent } from './intents'
+export { Intent, AnyBuiltinIntent } from './intents'
 export { Reply, AnyBuiltinReply } from './replies'
 export { mkWebsocketClientDriver } from './websocketClientDriver'
-export { DOMSource } from '@cycle/dom/lib/es6/rxjs'
-export { VNode } from '@cycle/dom'
 
 import { AnyBuiltinCommand, Command, GetState as GetStateCommand } from './commands'
 import { Event } from './events'
@@ -117,7 +115,7 @@ export function mkMain
 
         const replies$ = merge(clientSideReplies$, serverSideReplies$)
         const events$ = ws.pipe(filter((m: any): m is AnyEvent => m._type === 'event'))
-        const state$ = merge(events$, replies$)
+        const state$ = merge(events$, intents$, replies$)
             .pipe(scan<IncomingMessage, ClientState>((state, msg) => {
                 const isStateReply = (m: any): m is StateReply<ServerState> =>
                     msg._type === 'reply' && msg.name === 'state'

@@ -9,12 +9,15 @@ import {
 } from '../../shared/state';
 import { RepositoryId, RepositoryFields } from '../../shared/objects';
 
-import { AnyBuiltinReply, ReducerFn } from '@pimp/framework/client';
+import { AnyBuiltinIntent, AnyBuiltinReply } from '@pimp/framework/client';
+
+declare function assertNever(x: never): never;
 
 export interface UnsavedRepository {
-    id: RepositoryId;
+    id: RepositoryId | null;
     fields: RepositoryFields;
 }
+
 export interface State extends ServerState {
     unsavedRepositories: ReadonlyArray<UnsavedRepository>;
 }
@@ -24,16 +27,34 @@ export const mkState = (state: ServerState | null): State => ({
     unsavedRepositories: []
 });
 
-const intentReducer = (state: State, message: AnyIntent) => {
-    return state;
+const intentReducer = (state: State, intent: AnyIntent | AnyBuiltinIntent) => {
+    switch (intent.name) {
+        case 'create':
+            return {
+                ...state,
+                unsavedRepositories: [
+                    ...state.unsavedRepositories,
+                    {
+                        id: null,
+                        fields: { name: '', provider: 'bitbucket' }
+                    } as UnsavedRepository
+                ]
+            };
+        case 'edit':
+            throw new Error('Intent not implemented: ' + intent.name);
+        case 'remove':
+        case 'save':
+        case 'builtin view':
+            return state;
+        default:
+            return assertNever(intent);
+    }
 };
 
 const replyReducer = (
     state: State,
     message: AnyReply | AnyBuiltinReply<ServerState, ValidationFailureReason>
 ) => state;
-
-declare function assertNever(x: never): never;
 
 export const reducer = (
     state: State,

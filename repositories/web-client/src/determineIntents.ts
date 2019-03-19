@@ -1,11 +1,16 @@
-import { AnyIntent, EditRepository } from '../../shared/intents';
+import {
+    AnyIntent,
+    CreateRepository,
+    EditRepository
+} from '../../shared/intents';
 
 import { DOMSource } from '@cycle/dom/lib/es6/rxjs';
-import { Observable } from 'rxjs';
+import { merge, Observable } from 'rxjs';
 import { filter, map } from 'rxjs/operators';
 
 export const determineIntents = (dom: DOMSource): Observable<AnyIntent> => {
     const repositoryClicks$ = dom.select('pimp-repository').events('click');
+    const createClicks$ = dom.select('.create-button').events('click');
     const editClicks$ = repositoryClicks$.pipe(
         filter(
             (evt: Event) =>
@@ -14,6 +19,12 @@ export const determineIntents = (dom: DOMSource): Observable<AnyIntent> => {
         )
     );
 
+    const createIntents$ = createClicks$.pipe(
+        map(
+            (evt: Event) =>
+                ({ _type: 'intent', name: 'create' } as CreateRepository)
+        )
+    );
     const editIntents$ = editClicks$.pipe(
         map(
             (evt: Event) =>
@@ -25,5 +36,5 @@ export const determineIntents = (dom: DOMSource): Observable<AnyIntent> => {
         )
     );
 
-    return editIntents$;
+    return merge(createIntents$, editIntents$);
 };
