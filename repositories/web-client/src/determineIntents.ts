@@ -1,40 +1,33 @@
-import {
-    AnyIntent,
-    CreateRepository,
-    EditRepository
-} from '../../shared/intents';
+import { AnyIntent
+       , CreateRepository
+       , EditRepository
+       , SaveRepository
+       } from '../../shared/intents'
 
-import { DOMSource } from '@cycle/dom/lib/es6/rxjs';
-import { merge, Observable } from 'rxjs';
-import { filter, map } from 'rxjs/operators';
+import { DOMSource } from '@cycle/dom/lib/es6/rxjs'
+import { merge, Observable } from 'rxjs'
+import { filter, map, tap } from 'rxjs/operators'
 
 export const determineIntents = (dom: DOMSource): Observable<AnyIntent> => {
-    const repositoryClicks$ = dom.select('pimp-repository').events('click');
-    const createClicks$ = dom.select('.create-button').events('click');
-    const editClicks$ = repositoryClicks$.pipe(
-        filter(
-            (evt: Event) =>
-                !!evt.target &&
-                (evt.target as Element).classList.contains('edit-button')
-        )
-    );
+    const createClicks$ = dom.select('.create-button').events('click')
+    const editClicks$ = dom.select('pimp-repository .edit-button').events('click')
+    const saveClicks$ = dom.select('pimp-repository-edit .save-button').events('click')
 
-    const createIntents$ = createClicks$.pipe(
-        map(
-            (evt: Event) =>
-                ({ _type: 'intent', name: 'create' } as CreateRepository)
-        )
-    );
-    const editIntents$ = editClicks$.pipe(
-        map(
-            (evt: Event) =>
-                ({
-                    _type: 'intent',
-                    name: 'edit',
-                    id: (evt.currentTarget as HTMLElement).dataset['id']
-                } as EditRepository)
-        )
-    );
+    const createIntents$ = createClicks$
+        .pipe(map((evt: Event) => ({ _type: 'intent', name: 'create' } as CreateRepository)))
 
-    return merge(createIntents$, editIntents$);
-};
+    const editIntents$ = editClicks$
+        .pipe(map((evt: Event) => ({ _type: 'intent'
+                                   , name: 'edit'
+                                   , id: (evt.currentTarget as HTMLElement).dataset['id']
+                                   } as EditRepository)))
+
+    const saveIntents$ = saveClicks$
+        .pipe(map((evt: Event) => ({ _type: 'intent'
+                                   , name: 'save'
+                                   , id: (evt.currentTarget as HTMLElement).dataset['id']
+                                   } as SaveRepository)))
+                                   .pipe(tap(console.log))
+
+    return merge(createIntents$, editIntents$, saveIntents$)
+}
