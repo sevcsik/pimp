@@ -1,0 +1,14 @@
+{
+  "compilerOptions": {
+    "declaration": true,
+    "module": "commonjs",
+    "noImplicitAny": true,
+    "outDir": "cjs",
+    "sourceMap": true,
+    "strictNullChecks": true,
+    "target": "esnext",
+    "types": [ "node" ]
+  },
+  "files": [ "client.ts", "server.ts" ],
+  "exclude": [ "node_modules" ]
+}
