@@ -1,4 +1,4 @@
-import { Command } from '@pimp/framework/shared'
+import { Command } from '@pimp/framework/cjs/server'
 
 import { RepositoryFields, RepositoryId } from './objects'
 

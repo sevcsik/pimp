@@ -1,4 +1,4 @@
-import { Command, Reply } from '@pimp/framework/shared'
+import { Command, Reply } from '@pimp/framework/cjs/server'
 import { ValidationFailureReason } from './validateCommand'
 
 export interface CommandAccepted extends Reply { name: 'command accepted' }

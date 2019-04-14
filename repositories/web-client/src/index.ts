@@ -21,6 +21,8 @@ import { validateCommand
 
 import { create as createSpy } from 'rxjs-spy'
 
+createSpy().log()
+
 const drivers = { ws: mkWebsocketClientDriver('ws://localhost:8001')
                 , dom: makeDOMDriver('#repositories-manage')
                 }
@@ -41,5 +43,3 @@ const main = mkMain< AnyCommand
                     )
 
 run(main as any, drivers)
-
-createSpy()

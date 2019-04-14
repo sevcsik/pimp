@@ -1,5 +1,6 @@
 export { Command } from './commands'
 export { Event } from './events'
+export { Intent } from './intents'
 export { Reply, State as StateReply } from './replies'
 export { mkSharedSubjectEventQueueDriver } from './sharedSubjectEventQueueDriver'
 export { mkWebsocketServerDriver } from './websocketServerDriver'

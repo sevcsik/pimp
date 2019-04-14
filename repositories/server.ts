@@ -2,7 +2,7 @@
 // It needs to be imported before anything else
 import 'symbol-observable'
 
-import { mkMain, mkWebsocketServerDriver, mkSharedSubjectEventQueueDriver } from '@pimp/framework/server'
+import { mkMain, mkWebsocketServerDriver, mkSharedSubjectEventQueueDriver } from '@pimp/framework/cjs/server'
 
 import { defaults } from 'lodash/fp'
 import { ReplaySubject } from 'rxjs'
@@ -47,4 +47,4 @@ const serverOptions = defaults(
 const server = new WebSocket.Server(serverOptions)
 server.on('connection', onConnection)
 
-createSpy()
+createSpy().log()

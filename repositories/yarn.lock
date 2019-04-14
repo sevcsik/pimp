@@ -20,9 +20,12 @@
     symbol-observable "^1.2.0"
     xstream "11.x"
 
-"@pimp/framework@link:../framework":
-  version "0.0.0"
-  uid ""
+"@pimp/framework@~1.0.0":
+  version "1.0.0-a4"
+  resolved "http://localhost:4873/@pimp%2fframework/-/framework-1.0.0-a4.tgz#ab0477804addcfd8b1e45011aed68b6e5889da31"
+  integrity sha512-hBcJhmtCa6JnkpKNNeShfpFOLqMYNSSk7gBPH5XPJ6J5MNBGu0uAyksRIgtxyXSx7Dmh/l9GQoUxe8kaf2q4LA==
+  dependencies:
+    uuid "^3.3.2"
 
 "@types/circular-json@^0.4.0":
   version "0.4.0"

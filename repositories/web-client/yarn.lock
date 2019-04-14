@@ -153,9 +153,10 @@
   resolved "https://registry.yarnpkg.com/@most/prelude/-/prelude-1.7.2.tgz#be4ed406518d4c8c220e45c39fa7251365425b73"
   integrity sha512-GM5ec7+xpkuXiCMyzhyENgH/xZ8t0nAMDBY0QOsVVD6TrZYjJKUnW1eaI18HHX8W+COWMwWR9c0zoPiBp9+tUg==
 
-"@pimp/framework@link:../../framework":
-  version "0.0.0"
-  uid ""
+"@pimp/framework@file:.yalc/@pimp/framework":
+  version "1.0.0-0ebb2957"
+  dependencies:
+    uuid "^3.3.2"
 
 "@samverschueren/stream-to-observable@^0.3.0":
   version "0.3.0"

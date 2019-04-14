@@ -1,4 +1,4 @@
-import { Event } from '@pimp/framework/shared'
+import { Event } from '@pimp/framework/cjs/server'
 
 import { Repository, RepositoryId } from './objects'
 

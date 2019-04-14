@@ -1,4 +1,4 @@
-import { Intent } from '@pimp/framework/intents'
+import { Intent } from '@pimp/framework/cjs/server'
 
 import { Repository, RepositoryFields, RepositoryId } from '../shared/objects'
 

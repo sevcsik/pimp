@@ -5,7 +5,7 @@
   "devDependencies": {
     "@cycle/dom": "^22.3.0",
     "@cycle/rxjs-run": "^10.2.0",
-    "@pimp/framework": "link:../../framework",
+    "@pimp/framework": "1.0.0",
     "@types/mocha": "^5.2.5",
     "@types/uuid": "^3.3.2",
     "cycle-scripts-one-fits-all": ">=6.0.0",
