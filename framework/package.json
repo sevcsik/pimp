@@ -1,6 +1,6 @@
 {
   "name": "@pimp/framework",
-  "version": "1.0.0-a3",
+  "version": "1.0.0-a4",
   "main": "-",
   "license": "AGPL-3.0-or-later",
   "peerDependencies": {
