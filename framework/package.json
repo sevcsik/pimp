@@ -1,6 +1,6 @@
 {
   "name": "@pimp/framework",
-  "version": "1.0.0-a2",
+  "version": "1.0.0-a3",
   "main": "-",
   "license": "AGPL-3.0-or-later",
   "peerDependencies": {
@@ -24,6 +24,6 @@
     "uuid": "^3.3.2"
   },
   "scripts": {
-    "build": "tsc"
+    "publish": "tsc"
   }
 }
