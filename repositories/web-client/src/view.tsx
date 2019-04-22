@@ -4,13 +4,27 @@ import { State, UnsavedRepository } from './state'
 import { find, filter, flow, map } from 'lodash/fp'
 import { VNode } from '@cycle/dom'
 
-const renderUnsavedRepository = ({ id, fields: { name, provider } }: UnsavedRepository) =>
-    <pimp-repository-edit>
-        <input className="name-field" placeholder="Repository name" value={ name } />
-        <input className="provider-field" value={ provider } />
-        <button className="save-button" data-id={ id }>save</button>
-        <button className="discard-button" data-id={ id }>discard</button>
-    </pimp-repository-edit>
+const renderUnsavedRepository = ({ id, fields: { name, provider }, fieldValidationErrors }: UnsavedRepository) => {
+    const addErrors = (field: string) => (vnode: VNode, { elm }: VNode) => {
+        const error = find({ field }, fieldValidationErrors)
+        const input = (elm as HTMLInputElement)
+        if (error) input.setCustomValidity(error.reason)
+    }
+
+    const vnode = (
+        <pimp-repository-edit>
+            <form action="javascript:0">
+                <input className="name-field" placeholder="Repository name" hook-postpatch={ addErrors('repoName') }
+                       value={ name } />
+                <input className="provider-field" value={ provider } hook-postpatch={ addErrors('provider') } />
+                <button className="save-button" data-id={ id }>save</button>
+                <button className="discard-button" data-id={ id }>discard</button>
+            </form>
+        </pimp-repository-edit>
+    )
+
+    return vnode
+}
 
 const renderRepository = ({ id, name, provider }: Repository) =>
     <pimp-repository>
