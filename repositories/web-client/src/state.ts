@@ -1,7 +1,8 @@
 import { AnyEvent } from '../../shared/events'
 import { AnyIntent } from '../../shared/intents'
 import { AnyReply } from '../../shared/replies'
-import { ValidationFailureReason } from '../../shared/validateCommand'
+import { CreateRepository } from '../../shared/commands'
+import { ValidationFailureReason, InvalidField } from '../../shared/validateCommand'
 import { initialState
        , State as ServerState
        , reducer as eventReducer
@@ -9,18 +10,16 @@ import { initialState
 import { Repository, RepositoryFields, RepositoryId } from '../../shared/objects'
 
 import { AnyBuiltinIntent, AnyBuiltinReply } from '@pimp/framework/client'
-import { find } from 'lodash/fp'
+import { drop, find, findIndex, take } from 'lodash/fp'
 
 declare function assertNever(x: never): never
 
-export interface UnsavedRepository {
-    id: RepositoryId | null
-    fields: RepositoryFields
-}
+export interface UnsavedRepository { id: RepositoryId | null
+                                   , fields: RepositoryFields
+                                   , fieldValidationErrors: ReadonlyArray<InvalidField>
+                                   }
 
-export interface State extends ServerState {
-    unsavedRepositories: ReadonlyArray<UnsavedRepository>
-}
+export interface State extends ServerState { unsavedRepositories: ReadonlyArray<UnsavedRepository> }
 
 export const mkState = (state: ServerState | null): State => ({ ...(state !== null ? state : initialState)
                                                               , unsavedRepositories: []
@@ -31,18 +30,20 @@ const intentReducer = (state: State, intent: AnyIntent | AnyBuiltinIntent) => {
         case 'create':
             return { ...state
                    , unsavedRepositories: [ ...state.unsavedRepositories
-                                          , { id: null
+                                          , { id: 'new'
                                             , fields: { name: '', provider: 'bitbucket' }
+                                            , fieldValidationErrors: []
                                             } as UnsavedRepository
                                           ]
                   }
         case 'edit':
             const repository = find({ id: intent.id }, state.repositories)
-            if (repository) {
+            if (repository !== undefined) {
                 return { ...state
                        , unsavedRepositories: [ ...state.unsavedRepositories
                                               , { id: intent.id
                                                 , fields: {name: repository.name, provider: repository.provider }
+                                                , fieldValidationErrors: []
                                                 }
                                               ]
                        }
@@ -58,7 +59,39 @@ const intentReducer = (state: State, intent: AnyIntent | AnyBuiltinIntent) => {
     }
 }
 
-const replyReducer = (state: State, message: AnyReply | AnyBuiltinReply<ServerState, ValidationFailureReason>) => state
+const replyReducer = (state: State, message: AnyReply | AnyBuiltinReply<ServerState, ValidationFailureReason>) => {
+    switch (message.name) {
+        case 'command rejected':
+            switch (message.command.name) {
+                case 'update repository':
+                case 'create repository':
+                    // TODO: message.command should be AnyCommand, so no casting is necessary
+                    const cmd = message.command as CreateRepository
+                    switch (message.reason._type) {
+                        case 'invalid fields':
+                            // TODO: we should match with something more unique
+                            const unsavedRepositoryIndex = findIndex( repo => repo.fields.name === cmd.fields.name
+                                                                    , state.unsavedRepositories
+                                                                    )
+                            if (unsavedRepositoryIndex === -1) throw new Error('Cannot find repository for reply')
+                            const unsavedRepository = { ...state.unsavedRepositories[unsavedRepositoryIndex]
+                                                      , fieldValidationErrors: message.reason.invalidFields
+                                                      }
+                            const originalUnsavedRepositories = state.unsavedRepositories
+                            const unsavedRepositories =
+                                [ ...take(unsavedRepositoryIndex, originalUnsavedRepositories)
+                                , unsavedRepository
+                                , ...drop(unsavedRepositoryIndex + 1, originalUnsavedRepositories)
+                                ]
+                            return { ...state, unsavedRepositories }
+
+                        default: throw new Error('Unknown rejection reason: ' + message.reason._type)
+                    }
+                default: throw new Error('Unknown command rejected: ' + message.command.name)
+            }
+        default: return state // we don't need to handle builtins
+    }
+}
 
 export const reducer = ( state: State
                        , message:   AnyEvent

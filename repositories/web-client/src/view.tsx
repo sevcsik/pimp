@@ -35,7 +35,7 @@ export const renderState = (state: State) =>
                  , state.repositories
                  )
             }
-            { flow( filter<UnsavedRepository>(unsavedRepo => unsavedRepo.id === null)
+            { flow( filter<UnsavedRepository>(unsavedRepo => unsavedRepo.id === 'new')
                   , map(unsavedRepo => <li>{ renderUnsavedRepository(unsavedRepo) }</li>)
                   )(state.unsavedRepositories)
             }

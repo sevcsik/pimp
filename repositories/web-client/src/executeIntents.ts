@@ -13,17 +13,17 @@ export const executeIntents = (intent: AnyIntent): AnyCommand | null => {
         case 'remove':
             throw new Error(`Intent not implemented: ${intent.name}`)
         case 'save':
-            return intent.id ? { _type: 'command'
-                               , _id: uuid()
-                               , fields: intent.fields
-                               , id: intent.id
-                               , name: 'update repository'
-                               }
-                             : { _type: 'command'
-                               , _id: uuid()
-                               , fields: intent.fields
-                               , name: 'create repository'
-                               }
+            return intent.id !== 'new' ? { _type: 'command'
+                                         , _id: uuid()
+                                         , fields: intent.fields
+                                         , id: intent.id
+                                         , name: 'update repository'
+                                         }
+                                       : { _type: 'command'
+                                         , _id: uuid()
+                                         , fields: intent.fields
+                                         , name: 'create repository'
+                                         }
         default:
             return assertNever(intent)
     }
